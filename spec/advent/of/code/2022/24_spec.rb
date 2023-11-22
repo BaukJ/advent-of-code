@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-RSpec.describe Advent::Of::Code::2022::24 do
+RSpec.describe Bauk::AdventOfCode do
   it "has a version number" do
-    expect(Advent::Of::Code::2022::24::VERSION).not_to be nil
+    expect(Bauk::AdventOfCode::VERSION).not_to be nil
   end
 
   it "does something useful" do

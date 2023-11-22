@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+require "bauk/advent_of_code"
+
+Bauk::AdventOfCode.parse ARGV

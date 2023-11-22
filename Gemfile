@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-# Specify your gem's dependencies in advent-of-code-2022-24.gemspec
+# Specify your gem's dependencies in the gem's .gemspec file
 gemspec
 
 gem "rake", "~> 13.0"
