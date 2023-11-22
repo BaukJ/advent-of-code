@@ -2,15 +2,14 @@
 
 require_relative "advent_of_code/version"
 require_relative "advent_of_code/cli"
-require_relative "advent_of_code/logger"
 
 module Bauk
+  # Main module for all the AdventOfCode challenges
   module AdventOfCode
     class Error < StandardError; end
 
-    include Logger
     def self.parse(options)
-      puts CLI.new.parse(options)
+      CLI.new.parse(options)
     end
   end
 end
