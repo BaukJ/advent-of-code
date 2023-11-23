@@ -122,11 +122,11 @@ module Bauk
           def initialize
             super
             initialize_counters
-            @max_allowed_steps = 43
+            @max_allowed_steps = 50
             @max_possible_steps = 5**@max_allowed_steps # Theoretical max steps before the program finishes
             @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24.txt")))
             @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24_test_a.txt")))
-            @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24_test_d.txt")))
+            @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24_test_c.txt")))
             @maps = [@base_map]
             # @show_map = true
           end
@@ -139,8 +139,9 @@ module Bauk
           end
 
           def run
-            @start_time = Time.now
             generate_maps(@max_allowed_steps + 2) # Plus 2 just to be safe instead of putting in more complex logic
+            @start_time = Time.now
+            logger.warn("Starting run")
             turn(0, 1)
             logger.warn "Finished in #{time_taken}"
             if @steps
@@ -160,30 +161,30 @@ module Bauk
             logger.warn "Generating #{count} maps DONE"
           end
 
-          def turn(row, column, steps = [])
-            map = @maps[steps.length]
-            if @show_map
-              puts "TURN: #{steps.length}"
-              map.insert(row, column, "o")
-              puts map
-              sleep 0.1
-              map.unset(row, column)
-            end
-            logger.debug { "[#{row},#{column}] steps=#{steps.length}: #{steps}" }
+          def turn(row, column, steps = [], step_count = 0)
+            map = @maps[step_count]
+            # if @show_map
+            #   puts "TURN: #{steps.length}"
+            #   map.insert(row, column, "o")
+            #   puts map
+            #   sleep 0.1
+            #   map.unset(row, column)
+            # end
+            # logger.debug { "[#{row},#{column}] steps=#{steps.length}: #{steps}" }
 
-            if give_up?(map, row, column, steps)
+            if give_up?(map, row, column, steps, step_count)
               nil
-            elsif move(row, column, steps)
+            elsif move(row, column, steps, step_count)
               # Just a status update on moves
-              @total_moves += 1
+              # @total_moves += 1
               # if @total_moves % 10000000 == 0
-              if @total_moves % 1_000_000 == 0
-                logger.warn "Reached #{@total_moves} total moves in #{time_taken} completion will be more than #{100 * @total_moves.to_f / @max_possible_steps}%"
-              end
+              # if @total_moves % 1_000_000 == 0
+              #   logger.warn "Reached #{@total_moves} total moves in #{time_taken} completion will be more than #{100 * @total_moves.to_f / @max_possible_steps}%"
+              # end
               # exit if @total_moves > 3000000 # TODO: for testing performance
             else
-              logger.info { "Dead end [#{row},#{column}] steps=#{steps.length}" }
-              @terminated_dead_ends += 1
+              # logger.info { "Dead end [#{row},#{column}] steps=#{steps.length}" }
+              # @terminated_dead_ends += 1
             end
           end
 
@@ -194,9 +195,9 @@ module Bauk
             "#{minutes_taken}m #{seconds_taken}s"
           end
 
-          def finished?(map, row, column, steps)
+          def finished?(map, row, column, steps, step_count)
             if row == map.row_max_index && column == map.column_max_index - 1
-              return false if @step_count&.<= steps.length # Ignore finished paths that are no shorter
+              return false if @step_count&.<= step_count # Ignore finished paths that are no shorter
 
               @steps = steps
               @step_count = steps.length
@@ -205,48 +206,48 @@ module Bauk
             false
           end
 
-          def give_up?(map, row, column, steps)
+          def give_up?(map, row, column, steps, step_count)
             max_steps = @step_count || @max_allowed_steps # Use the lowest found path or max steps
-            current_steps = steps.length
-            if finished?(map, row, column, steps)
-              logger.warn "SUCCESS: steps=#{steps.length} in #{time_taken}"
-            elsif current_steps >= max_steps
-              logger.info do
-                "Too many steps taken: #{current_steps} [max allowed: #{@max_allowed_steps}, shortest found path: #{@steps_count}]"
-              end
-              @terminated_too_long += 1
-            elsif (max_steps - current_steps) < (map.row_max_index - row) + (map.column_max_index - 1 - column) # Last row, second to last column
-              logger.info do
-                "Would hit the max allowed steps: [max allowed: #{@max_allowed_steps}, shortest found path: #{@steps_count}]"
-              end
-              @terminated_too_long += 1
+            if finished?(map, row, column, steps, step_count)
+              logger.warn "SUCCESS: steps=#{step_count} in #{time_taken}"
+            elsif step_count >= max_steps
+              # logger.info do
+              #   "Too many steps taken: #{step_count} [max allowed: #{@max_allowed_steps}, shortest found path: #{@steps_count}]"
+              # end
+              # @terminated_too_long += 1
+            elsif (max_steps - step_count) < (map.row_max_index - row) + (map.column_max_index - 1 - column) # Last row, second to last column
+              # logger.info do
+              #   "Would hit the max allowed steps: [max allowed: #{@max_allowed_steps}, shortest found path: #{@steps_count}]"
+              # end
+              # @terminated_too_long += 1
             else
               return false
             end
             true
           end
 
-          def move(row, column, steps = [])
-            map = @maps[steps.length + 1]
+          def move(row, column, steps, step_count)
+            new_step_count = step_count + 1
+            map = @maps[new_step_count]
             moved = false
             if map.is_free?(row, column + 1) # right
-              turn(row, column + 1, steps + [:r])
+              turn(row, column + 1, steps + [:r], new_step_count)
               moved = true
             end
             if map.is_free?(row + 1, column) # down
-              turn(row + 1, column, steps + [:d])
+              turn(row + 1, column, steps + [:d], new_step_count)
               moved = true
             end
             if map.is_free?(row, column) # stand still / stop
-              turn(row, column, steps + [:s])
+              turn(row, column, steps + [:s], new_step_count)
               moved = true
             end
             if map.is_free?(row, column - 1) # left
-              turn(row, column - 1, steps + [:l])
+              turn(row, column - 1, steps + [:l], new_step_count)
               moved = true
             end
             if map.is_free?(row - 1, column) # up
-              turn(row - 1, column, steps + [:u])
+              turn(row - 1, column, steps + [:u], new_step_count)
               moved = true
             end
             moved
