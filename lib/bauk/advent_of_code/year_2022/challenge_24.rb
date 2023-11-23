@@ -99,24 +99,34 @@ module Bauk
         def initialize
           super
           @total_moves = 0
-          @max_allowed_steps = 500
-          @maps = []
-          #@show_map = true
+          @max_allowed_steps = 1000
+          @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24.txt")))
+          @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24_test.txt")))
+          @maps = [@base_map]
+          # @show_map = true
         end
 
         def run
-          map = Map.from_s(File.read(File.join(__dir__, "challenge_24.txt")))
-          map = Map.from_s(File.read(File.join(__dir__, "challenge_24_test.txt")))
           @start_time = Time.now
-          turn(map, 0, 1)
+          generate_maps(@max_allowed_steps + 2) # Plus 2 just to be safe instead of putting in more complex logic
+          turn(0, 1)
           logger.warn "SUCCESS. Finished parsing and found the quickest path: #{@steps}"
         end
 
-        def turn(map, row, column, steps = [], complete = 100)
+        def generate_maps(count)
+          logger.warn "Generating #{count} maps"
+          (0..count).each do
+            @maps << @maps[-1].update
+          end
+          logger.warn "Generating #{count} maps DONE"
+        end
+
+        def turn(row, column, steps = [], complete = 100)
+          map = @maps[steps.length]
           if @show_map
             map.insert(row, column, "o")
             puts map
-            #sleep 0.1
+            sleep 0.1
             map.unset(row, column)
           end
           logger.debug { "[#{row},#{column}] steps=#{steps.length}: #{steps}" }
@@ -129,40 +139,40 @@ module Bauk
             logger.warn "SUCCESS: steps=#{steps.length}  #{complete}% complete"
             @steps = steps
             @step_count = steps.length            
-          elsif move(map, row, column, steps, complete)
+          elsif move(row, column, steps, complete)
             # Just a status update on moves
             @total_moves += 1
-            if @total_moves % 10000 == 0
+            if @total_moves % 1000000 == 0
               seconds_taken = (Time.now - @start_time).to_i
               minutes_taken = seconds_taken / 60
               logger.warn "Reached #{@total_moves} total moves in #{minutes_taken}m #{seconds_taken}s, completion is at #{complete}%"
             end
-            exit if @total_moves > 50000 # TODO: for testing performance
+            exit if @total_moves > 5000000 # TODO: for testing performance
           else
             logger.info { "Dead end [#{row},#{column}] steps=#{steps.length}  #{complete}% complete" }
           end
         end
         
-        def move(map, row, column, steps = [], complete = 100)
-          map = map.update
+        def move(row, column, steps = [], complete = 100)
+          map = @maps[steps.length + 1]
           if map.is_free?(row, column + 1) # right
-            turn(map, row, column + 1, steps + [:r], complete * 0.2)
+            turn(row, column + 1, steps + [:r], complete * 0.2)
             moved = true
           end
           if map.is_free?(row + 1, column) # down
-            turn(map, row + 1, column, steps + [:d], complete * 0.4)
+            turn(row + 1, column, steps + [:d], complete * 0.4)
             moved = true
           end
           if map.is_free?(row, column) # stand still / stop
-            turn(map, row, column, steps + [:s], complete * 0.6)
+            turn(row, column, steps + [:s], complete * 0.6)
             moved = true
           end
           if map.is_free?(row, column - 1) # left
-            turn(map, row, column - 1, steps + [:l], complete * 0.8)
+            turn(row, column - 1, steps + [:l], complete * 0.8)
             moved = true
           end
           if map.is_free?(row - 1, column) # up
-            turn(map, row - 1, column, steps + [:u], complete)
+            turn(row - 1, column, steps + [:u], complete)
             moved = true
           end
           return moved
