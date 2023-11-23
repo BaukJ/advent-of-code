@@ -27,8 +27,8 @@ module Bauk
 
           def insert(row, column, item)
             if item != "o"
-              row = 1 if row == @row_max_index
-              column = 1 if column == @column_max_index
+              row = 1 if row >= @row_max_index
+              column = 1 if column >= @column_max_index
               row = @row_max_index - 1 if row.zero?
               column = @column_max_index - 1 if column.zero?
             end
@@ -122,27 +122,35 @@ module Bauk
           def initialize
             super
             initialize_counters
-            @max_allowed_steps = 50
+            initialize_flags
             @max_possible_steps = 5**@max_allowed_steps # Theoretical max steps before the program finishes
-            @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24.txt")))
             @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24_test_a.txt")))
             @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24_test_c.txt")))
+            @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24.txt")))
             @maps = [@base_map]
-            # @show_map = true
           end
-
+          
           def initialize_counters
             @total_moves = 0
             @terminated_dead_ends = 0
             @terminated_too_long = 0
             @active_paths = 0
           end
+          
+          def initialize_flags
+            @max_allowed_steps = 500
+            @booleanize = true
+            # @wall_of_fire = true # If set, a barrier slowly creeps in from the top left to the bottom right
+            @wall_of_fire_turns = 5
+            # @show_map = true
+          end
 
           def run
             generate_maps(@max_allowed_steps + 2) # Plus 2 just to be safe instead of putting in more complex logic
             @start_time = Time.now
             logger.warn("Starting run")
-            turn(0, 1)
+            # turn(0, 1)
+            rounds()
             logger.warn "Finished in #{time_taken}"
             if @steps
               logger.warn "SUCCESS. Finished parsing and found the quickest path in #{@steps.length} steps: #{@steps}"
@@ -156,23 +164,96 @@ module Bauk
             (0..count).each do
               @maps << @maps[-1].update
             end
-            @maps.each { |map| map.booleanize! }
+            @maps.each { |map| map.booleanize! } if @booleanize
+            if @wall_of_fire
+              @maps.each_with_index do |map, i|
+                wall = i / @wall_of_fire_turns
+                (1..wall).each do |row|
+                  (1..(wall-row)).each do |column|
+                    map.insert(row, column, false)
+                  end 
+                end
+              end
+            end
             # [@maps, @start_time].each { |obj| Ractor.make_shareable(obj) }
             logger.warn "Generating #{count} maps DONE"
           end
 
+          def rounds
+            paths = [{row: 0, column: 1, steps: []}]
+            (0..@max_allowed_steps).each do |itteration|
+              logger.warn "Doing itteration #{itteration} (#{paths.length} paths) in #{time_taken}"
+              paths = prune_paths paths
+              paths = round(paths, itteration)
+              return if paths.empty?
+            end
+          end
+
+          # Removed any paths that end you up in the same place, assuming they all have the same length
+          def prune_paths(paths)
+            pruned_paths = {}
+            paths.each do |path|
+              pruned_paths["#{path[:row]}_#{path[:column]}"] = path
+            end
+            pruned_paths.values
+          end
+
+          def round(paths, itteration)
+            map = @maps[itteration]
+            mew_map = @maps[itteration]
+            new_paths = []
+            paths.each do |path|
+              if @show_map
+                puts "Itteration: #{itteration}"
+                map.insert(path[:row], path[:column], "o")
+                puts map
+                sleep 0.1
+                map.unset(path[:row], path[:column])
+              end
+              if finished?(map, path[:row], path[:column], path[:steps], itteration)
+                logger.warn "SUCCESS: steps=#{itteration} in #{time_taken}"
+                return []
+              # elsif ! give_up?(map, path[:row], path[:column], path[:steps], itteration)
+              else
+                if mew_map.is_free?(path[:row], path[:column] + 1) # right
+                  # new_paths << {row: path[:row], column: path[:column] + 1, steps: path[:steps]}
+                  new_paths << {row: path[:row], column: path[:column] + 1, steps: path[:steps] + [:r]}
+                end
+                if mew_map.is_free?(path[:row] + 1, path[:column]) # down
+                  # new_paths << {row: path[:row] + 1, column: path[:column], steps: path[:steps]}
+                  new_paths << {row: path[:row] + 1, column: path[:column], steps: path[:steps] + [:d]}
+                end
+                if mew_map.is_free?(path[:row], path[:column]) # stand still / stop
+                  # new_paths << {row: path[:row], column: path[:column], steps: path[:steps]}
+                  new_paths << {row: path[:row], column: path[:column], steps: path[:steps] + [:s]}
+                end
+                if mew_map.is_free?(path[:row], path[:column] - 1) # left
+                  # new_paths << {row: path[:row], column: path[:column] - 1, steps: path[:steps]}
+                  new_paths << {row: path[:row], column: path[:column] - 1, steps: path[:steps] + [:l]}
+                end
+                if mew_map.is_free?(path[:row] - 1, path[:column]) # up
+                  # new_paths << {row: path[:row] - 1, column: path[:column], steps: path[:steps]}
+                  new_paths << {row: path[:row] - 1, column: path[:column], steps: path[:steps] + [:u]}
+                end
+              end
+            end
+            new_paths
+          end
+
           def turn(row, column, steps = [], step_count = 0)
             map = @maps[step_count]
-            # if @show_map
-            #   puts "TURN: #{steps.length}"
-            #   map.insert(row, column, "o")
-            #   puts map
-            #   sleep 0.1
-            #   map.unset(row, column)
-            # end
+            if @show_map
+              puts "TURN: #{steps.length}"
+              map.insert(row, column, "o")
+              puts map
+              sleep 0.1
+              map.unset(row, column)
+            end
             # logger.debug { "[#{row},#{column}] steps=#{steps.length}: #{steps}" }
-
-            if give_up?(map, row, column, steps, step_count)
+            
+            if finished?(map, row, column, steps, step_count)
+              logger.warn "SUCCESS: steps=#{step_count} in #{time_taken}"
+            elsif give_up?(map, row, column, steps, step_count)
               nil
             elsif move(row, column, steps, step_count)
               # Just a status update on moves
@@ -207,9 +288,7 @@ module Bauk
 
           def give_up?(map, row, column, steps, step_count)
             max_steps = @step_count || @max_allowed_steps # Use the lowest found path or max steps
-            if finished?(map, row, column, steps, step_count)
-              logger.warn "SUCCESS: steps=#{step_count} in #{time_taken}"
-            elsif step_count >= max_steps
+            if step_count >= max_steps
               # logger.info do
               #   "Too many steps taken: #{step_count} [max allowed: #{@max_allowed_steps}, shortest found path: #{@steps_count}]"
               # end
