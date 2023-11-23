@@ -29,6 +29,9 @@ module Bauk
           puts VERSION
           exit
         end
+        opts.on("-v", "Increase verbosity") do
+          logger.level = ::Logger::INFO
+        end
       end
 
       def add_opts(opts)
