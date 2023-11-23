@@ -46,7 +46,7 @@ module Bauk
       def parse(options)
         @parser.parse!(options)
         begin
-          challenge = ["Year#{@opts.year}", "Challenge#{@opts.challenge}"].inject(AdventOfCode) do |o, c|
+          challenge = ["Year#{@opts.year}", "Challenge#{@opts.challenge}", "Runner"].inject(AdventOfCode) do |o, c|
             o.const_get c
           end.new
         rescue NameError

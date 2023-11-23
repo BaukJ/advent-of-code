@@ -3,20 +3,21 @@ require_relative "../challenge"
 module Bauk
   module AdventOfCode
     module Year2022
-      class Challenge24 < Challenge
+      module Challenge24
         class Map < BaseClass
           attr_accessor :map
           attr_reader :row_max_index, :column_max_index, :row_count, :column_count
 
           def initialize(rows, columns)
             super()
+            @booleanized = false
             @row_count = rows
             @column_count = columns
             @row_max_index = rows - 1
             @column_max_index = columns - 1
             @map = []
             @map << (1..columns).map { "#" }
-            (1..rows-2).each do
+            (1..rows - 2).each do
               @map << ["#", *(1..columns - 2).map { [] }, "#"]
             end
             @map << (1..columns).map { "#" }
@@ -35,18 +36,21 @@ module Bauk
           end
 
           def unset(row, column)
-            @map[row][column] = []
+            @map[row][column] = @booleanized ? true : []
           end
 
           def to_s
             @map.map do |row|
-              row.map { |column|
-                if column.empty? then " "
+              row.map do |column|
+                if column == true then " "
+                elsif column == false then "X"
+                elsif column.empty? then " "
                 elsif column == ["o"] then "\e[48;5;10mo\e[0m"
                 elsif column.length > 1 then column.length
-                else column[0]
+                else
+                  column[0]
                 end
-              }.join("")
+              end.join("")
             end.join("\n")
           end
 
@@ -55,7 +59,8 @@ module Bauk
               row.split("").map do |i|
                 if i == "." then []
                 elsif i == "#" then i
-                else [i]
+                else
+                  [i]
                 end
               end
             end
@@ -92,90 +97,147 @@ module Bauk
           end
 
           def is_free?(row, column)
+            return @map[row][column] if @booleanize
+
             row >= 0 and column >= 0 and row <= @row_max_index and column <= @column_max_index and @map[row][column] == []
           end
+
+          # This makes the map almost unreadable, but speeds up the is_free check
+          # It changes each item to just a true or false value, true if the space is free
+          def booleanize!; end
         end
 
-        def initialize
-          super
-          @total_moves = 0
-          @max_allowed_steps = 1000
-          @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24.txt")))
-          @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24_test.txt")))
-          @maps = [@base_map]
-          # @show_map = true
-        end
-
-        def run
-          @start_time = Time.now
-          generate_maps(@max_allowed_steps + 2) # Plus 2 just to be safe instead of putting in more complex logic
-          turn(0, 1)
-          logger.warn "SUCCESS. Finished parsing and found the quickest path: #{@steps}"
-        end
-
-        def generate_maps(count)
-          logger.warn "Generating #{count} maps"
-          (0..count).each do
-            @maps << @maps[-1].update
+        class Runner < Challenge
+          def initialize
+            super
+            initialize_counters
+            @max_allowed_steps = 43
+            @max_possible_steps = 5**@max_allowed_steps # Theoretical max steps before the program finishes
+            @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24.txt")))
+            @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24_test_a.txt")))
+            @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24_test_c.txt")))
+            @maps = [@base_map]
+            # @show_map = true
           end
-          logger.warn "Generating #{count} maps DONE"
-        end
 
-        def turn(row, column, steps = [], complete = 100)
-          map = @maps[steps.length]
-          if @show_map
-            map.insert(row, column, "o")
-            puts map
-            sleep 0.1
-            map.unset(row, column)
+          def initialize_counters
+            @total_moves = 0
+            @terminated_dead_ends = 0
+            @terminated_too_long = 0
+            @active_paths = 0
           end
-          logger.debug { "[#{row},#{column}] steps=#{steps.length}: #{steps}" }
-          
-          if steps.length > @max_allowed_steps
-            logger.info { "Hit the max allowe steps: #{steps.length}/#{@max_allowed_steps} #{complete}% complete" }
-          elsif @step_count&.<= steps.length
-            logger.info { "Too slow to beat current max: #{steps.length}/#{@step_count} #{complete}% complete" }
-          elsif row == map.row_max_index && column == map.column_max_index - 1
-            logger.warn "SUCCESS: steps=#{steps.length}  #{complete}% complete"
-            @steps = steps
-            @step_count = steps.length            
-          elsif move(row, column, steps, complete)
-            # Just a status update on moves
-            @total_moves += 1
-            if @total_moves % 1000000 == 0
-              seconds_taken = (Time.now - @start_time).to_i
-              minutes_taken = seconds_taken / 60
-              logger.warn "Reached #{@total_moves} total moves in #{minutes_taken}m #{seconds_taken}s, completion is at #{complete}%"
+
+          def run
+            @start_time = Time.now
+            generate_maps(@max_allowed_steps + 2) # Plus 2 just to be safe instead of putting in more complex logic
+            turn(0, 1)
+            logger.warn "Finished in #{time_taken}"
+            if @steps
+              logger.warn "SUCCESS. Finished parsing and found the quickest path in #{@steps.length} steps: #{@steps}"
+            else
+              logger.warn "FAILURE: Could not find a route in only #{@max_allowed_steps} steps (#{@terminated_dead_ends} dead ends and #{@terminated_too_long} too long)"
             end
-            exit if @total_moves > 5000000 # TODO: for testing performance
-          else
-            logger.info { "Dead end [#{row},#{column}] steps=#{steps.length}  #{complete}% complete" }
           end
-        end
-        
-        def move(row, column, steps = [], complete = 100)
-          map = @maps[steps.length + 1]
-          if map.is_free?(row, column + 1) # right
-            turn(row, column + 1, steps + [:r], complete * 0.2)
-            moved = true
+
+          def generate_maps(count)
+            logger.warn "Generating #{count} maps"
+            (0..count).each do
+              @maps << @maps[-1].update
+            end
+            # [@maps, @start_time].each { |obj| Ractor.make_shareable(obj) }
+            logger.warn "Generating #{count} maps DONE"
           end
-          if map.is_free?(row + 1, column) # down
-            turn(row + 1, column, steps + [:d], complete * 0.4)
-            moved = true
+
+          def turn(row, column, steps = [])
+            map = @maps[steps.length]
+            if @show_map
+              puts "TURN: #{steps.length}"
+              map.insert(row, column, "o")
+              puts map
+              sleep 0.1
+              map.unset(row, column)
+            end
+            logger.debug { "[#{row},#{column}] steps=#{steps.length}: #{steps}" }
+
+            if give_up?(map, row, column, steps)
+              nil
+            elsif move(row, column, steps)
+              # Just a status update on moves
+              @total_moves += 1
+              # if @total_moves % 10000000 == 0
+              if @total_moves % 1_000_000 == 0
+                logger.warn "Reached #{@total_moves} total moves in #{time_taken} completion will be more than #{100 * @total_moves.to_f / @max_possible_steps}%"
+              end
+              # exit if @total_moves > 3000000 # TODO: for testing performance
+            else
+              logger.info { "Dead end [#{row},#{column}] steps=#{steps.length}" }
+            end
           end
-          if map.is_free?(row, column) # stand still / stop
-            turn(row, column, steps + [:s], complete * 0.6)
-            moved = true
+
+          def time_taken
+            seconds_taken = (Time.now - @start_time).to_i
+            minutes_taken = seconds_taken / 60
+            seconds_taken %= 60
+            "#{minutes_taken}m #{seconds_taken}s"
           end
-          if map.is_free?(row, column - 1) # left
-            turn(row, column - 1, steps + [:l], complete * 0.8)
-            moved = true
+
+          def finished?(map, row, column, steps)
+            if row == map.row_max_index && column == map.column_max_index - 1
+              return false if @step_count&.<= steps.length # Ignore finished paths that are no shorter
+
+              @steps = steps
+              @step_count = steps.length
+              return true
+            end
+            false
           end
-          if map.is_free?(row - 1, column) # up
-            turn(row - 1, column, steps + [:u], complete)
-            moved = true
+
+          def give_up?(map, row, column, steps)
+            max_steps = @step_count || @max_allowed_steps # Use the lowest found path or max steps
+            current_steps = steps.length
+            if finished?(map, row, column, steps)
+              logger.warn "SUCCESS: steps=#{steps.length} in #{time_taken}"
+            elsif current_steps >= max_steps
+              logger.info do
+                "Too many steps taken: #{current_steps} [max allowed: #{@max_allowed_steps}, shortest found path: #{@steps_count}]"
+              end
+              @terminated_too_long += 1
+            elsif (max_steps - current_steps) < (map.row_max_index - row) + (map.column_max_index - 1 - column) # Last row, second to last column
+              logger.info do
+                "Would hit the max allowed steps: [max allowed: #{@max_allowed_steps}, shortest found path: #{@steps_count}]"
+              end
+              @terminated_too_long += 1
+            else
+              return false
+            end
+            true
           end
-          return moved
+
+          def move(row, column, steps = [])
+            map = @maps[steps.length + 1]
+            moved = false
+            if map.is_free?(row, column + 1) # right
+              turn(row, column + 1, steps + [:r])
+              moved = true
+            end
+            if map.is_free?(row + 1, column) # down
+              turn(row + 1, column, steps + [:d])
+              moved = true
+            end
+            if map.is_free?(row, column) # stand still / stop
+              turn(row, column, steps + [:s])
+              moved = true
+            end
+            if map.is_free?(row, column - 1) # left
+              turn(row, column - 1, steps + [:l])
+              moved = true
+            end
+            if map.is_free?(row - 1, column) # up
+              turn(row - 1, column, steps + [:u])
+              moved = true
+            end
+            moved
+          end
         end
       end
     end

@@ -7,7 +7,7 @@ module Bauk
   module AdventOfCode
     # Mixin providing the logging framework for this gem
     module Logger
-      #@@logger = ::Logger.new(STDOUT)
+      # @@logger = ::Logger.new(STDOUT)
       @@logger = nil
 
       def logger
