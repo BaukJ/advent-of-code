@@ -32,7 +32,11 @@ module Bauk
               row = @row_max_index - 1 if row.zero?
               column = @column_max_index - 1 if column.zero?
             end
-            @map[row][column] << item
+            if @booleanized
+              @map[row][column] = item
+            else
+              @map[row][column] << item
+            end
           end
 
           def unset(row, column)
@@ -45,7 +49,7 @@ module Bauk
                 if column == true then " "
                 elsif column == false then "X"
                 elsif column.empty? then " "
-                elsif column == ["o"] then "\e[48;5;10mo\e[0m"
+                elsif column == ["o"] || column == "o" then "\e[48;5;10mo\e[0m"
                 elsif column.length > 1 then column.length
                 else
                   column[0]
@@ -97,14 +101,21 @@ module Bauk
           end
 
           def is_free?(row, column)
-            return @map[row][column] if @booleanize
+            return @map[row][column] if @booleanized
 
             row >= 0 and column >= 0 and row <= @row_max_index and column <= @column_max_index and @map[row][column] == []
           end
 
           # This makes the map almost unreadable, but speeds up the is_free check
           # It changes each item to just a true or false value, true if the space is free
-          def booleanize!; end
+          def booleanize!
+            @booleanized = true
+            @map.map! do |row|
+              row.map do |column|
+                column.is_a?(Array) && (column.empty? || column == ["o"])
+              end
+            end
+          end
         end
 
         class Runner < Challenge
@@ -115,7 +126,7 @@ module Bauk
             @max_possible_steps = 5**@max_allowed_steps # Theoretical max steps before the program finishes
             @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24.txt")))
             @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24_test_a.txt")))
-            @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24_test_c.txt")))
+            @base_map = Map.from_s(File.read(File.join(__dir__, "challenge_24_test_d.txt")))
             @maps = [@base_map]
             # @show_map = true
           end
@@ -144,6 +155,7 @@ module Bauk
             (0..count).each do
               @maps << @maps[-1].update
             end
+            @maps.each { |map| map.booleanize! }
             # [@maps, @start_time].each { |obj| Ractor.make_shareable(obj) }
             logger.warn "Generating #{count} maps DONE"
           end
@@ -171,6 +183,7 @@ module Bauk
               # exit if @total_moves > 3000000 # TODO: for testing performance
             else
               logger.info { "Dead end [#{row},#{column}] steps=#{steps.length}" }
+              @terminated_dead_ends += 1
             end
           end
 
