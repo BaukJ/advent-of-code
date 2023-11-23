@@ -176,11 +176,10 @@ module Bauk
               nil
             elsif move(row, column, steps, step_count)
               # Just a status update on moves
-              # @total_moves += 1
-              # if @total_moves % 10000000 == 0
-              # if @total_moves % 1_000_000 == 0
-              #   logger.warn "Reached #{@total_moves} total moves in #{time_taken} completion will be more than #{100 * @total_moves.to_f / @max_possible_steps}%"
-              # end
+              @total_moves += 1
+              if @total_moves % 10_000_000 == 0
+                logger.warn "Reached #{@total_moves} total moves in #{time_taken} completion will be more than #{100 * @total_moves.to_f / @max_possible_steps}%"
+              end
               # exit if @total_moves > 3000000 # TODO: for testing performance
             else
               # logger.info { "Dead end [#{row},#{column}] steps=#{steps.length}" }
