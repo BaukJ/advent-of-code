@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
+
 require "bauk/advent_of_code"
 
 Bauk::AdventOfCode.parse ARGV

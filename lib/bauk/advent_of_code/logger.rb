@@ -12,7 +12,7 @@ module Bauk
 
       def logger
         unless @@logger
-          @@logger = ::Logger.new(STDOUT)
+          @@logger = ::Logger.new($stdout)
           @@logger.level = ::Logger::WARN
         end
         @@logger
