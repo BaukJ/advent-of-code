@@ -34,6 +34,20 @@ module Bauk
         []
       end
 
+      def to_s
+        @map.map.with_index do |row, row_index|
+          row.map.with_index do |column, column_index|
+            if empty?(row_index, column_index) then " "
+            elsif [["o"], "o"].include?(column) then "\e[48;5;10mo\e[0m"
+            elsif !column.is_a? Array then column
+            elsif column.length > 1 then column.length
+            else
+              column[0]
+            end
+          end.join("")
+        end.join("\n")
+      end
+
       # TODO: this logic
       def update
         new_map = generate_map
