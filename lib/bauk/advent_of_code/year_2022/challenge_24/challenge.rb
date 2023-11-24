@@ -84,64 +84,6 @@ module Bauk
             end
           end
 
-          def rounds
-            paths = [{ row: 0, column: 1, steps: [] }]
-            (0..Opts.max_steps).each do |itteration|
-              logger.warn "Doing itteration #{itteration} (#{paths.length} paths) in #{time_taken}"
-              paths = prune_paths paths
-              paths = round(paths, itteration)
-              return if paths.empty?
-            end
-          end
-
-          # Removed any paths that end you up in the same place, assuming they all have the same length
-          def prune_paths(paths)
-            pruned_paths = {}
-            paths.each do |path|
-              if pruned_paths["#{path[:row]}_#{path[:column]}"]
-                logger.debug "Pruned the following: #{path} with #{pruned_paths["#{path[:row]}_#{path[:column]}"]}"
-              end
-              pruned_paths["#{path[:row]}_#{path[:column]}"] = path
-            end
-            pruned_paths.values
-          end
-
-          def round(paths, itteration)
-            map = @maps[itteration]
-            mew_map = @maps[itteration]
-            new_paths = []
-            paths.each do |path|
-              if Opts.show_map
-                puts "Itteration: #{itteration}"
-                map.insert(path[:row], path[:column], "o")
-                puts map
-                sleep Opts.show_map_sleep
-                map.unset(path[:row], path[:column])
-              end
-              if finished?(map, path[:row], path[:column], path[:steps], itteration)
-                logger.warn "SUCCESS: steps=#{itteration} in #{time_taken}"
-                return []
-              else
-                if mew_map.free?(path[:row], path[:column] + 1) # right
-                  new_paths << { row: path[:row], column: path[:column] + 1, steps: path[:steps] + [:r] }
-                end
-                if mew_map.free?(path[:row] + 1, path[:column]) # down
-                  new_paths << { row: path[:row] + 1, column: path[:column], steps: path[:steps] + [:d] }
-                end
-                if mew_map.free?(path[:row], path[:column]) # stand still / stop
-                  new_paths << { row: path[:row], column: path[:column], steps: path[:steps] + [:s] }
-                end
-                if mew_map.free?(path[:row], path[:column] - 1) # left
-                  new_paths << { row: path[:row], column: path[:column] - 1, steps: path[:steps] + [:l] }
-                end
-                if mew_map.free?(path[:row] - 1, path[:column]) # up
-                  new_paths << { row: path[:row] - 1, column: path[:column], steps: path[:steps] + [:u] }
-                end
-              end
-            end
-            new_paths
-          end
-
           def turn(row, column, steps = [], step_count = 0)
             map = @maps[step_count]
             if Opts.show_map
