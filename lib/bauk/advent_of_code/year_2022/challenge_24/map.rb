@@ -1,28 +1,24 @@
 # frozen_string_literal: true
 
+require_relative "../../base_map"
+
 module Bauk
   module AdventOfCode
     module Year2022
       module Challenge24
-        class Map < BaseClass
-          attr_accessor :map
-          attr_reader :row_max_index, :column_max_index, :row_count, :column_count
-
+        class Map < BaseMap
           def initialize(rows, columns)
-            super()
+            super(rows, columns)
             @booleanized = false
-            @row_count = rows
-            @column_count = columns
-            @row_max_index = rows - 1
-            @column_max_index = columns - 1
-            @map = []
-            @map << (1..columns).map { "#" }
-            (1..rows - 2).each do
-              @map << ["#", *(1..columns - 2).map { [] }, "#"]
-            end
-            @map << (1..columns).map { "#" }
             @map[0][1] = [] # Start
             @map[-1][-2] = [] # End
+          end
+
+          def generate_cell(row, column)
+            if row.zero? || row == row_max_index then "#"
+            elsif column.zero? || column == column_max_index then "#"
+            else []
+            end
           end
 
           def insert(row, column, item)
@@ -70,10 +66,10 @@ module Bauk
                 end
               end
             end
-            map = Map.new(items.length, items[0].length)
-            map.map = items
-            map.validate_lengths
-            map
+            new_map = Map.new(items.length, items[0].length)
+            new_map.map = items
+            new_map.validate_lengths
+            new_map
           end
 
           def validate_lengths
@@ -104,8 +100,7 @@ module Bauk
 
           def is_free?(row, column)
             return @map[row][column] if @booleanized
-
-            row >= 0 and column >= 0 and row <= @row_max_index and column <= @column_max_index and @map[row][column] == []
+            empty? row, column
           end
 
           # This makes the map almost unreadable, but speeds up the is_free check

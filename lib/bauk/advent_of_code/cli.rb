@@ -54,8 +54,8 @@ module Bauk
         begin
           challenge_class = challenge_module.const_get("Challenge").new
         rescue NameError => e
-          puts e
-          die "Year/Challenge of #{year}/#{challenge} did not bring back a challenge class"
+          logger.error "Year/Challenge of #{year}/#{challenge} did not bring back a challenge class"
+          raise e
         end
         parse_challenge_options(challenge_module, options)
         challenge_class.run
@@ -76,8 +76,8 @@ module Bauk
           o.const_get c
         end
       rescue NameError => e
-        puts e
-        die "Year/Challenge of #{year}/#{challenge} did not bring back a module"
+        logger.error "Year/Challenge of #{year}/#{challenge} did not bring back a module"
+        raise e
       end
     end
   end
