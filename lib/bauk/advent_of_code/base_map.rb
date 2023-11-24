@@ -6,7 +6,8 @@ module Bauk
   module AdventOfCode
     # Base class for all maps
     class BaseMap < BaseClass
-      attr_reader :row_count, :column_count, :row_max_index, :column_max_index, :map
+      attr_accessor :map
+      attr_reader :row_count, :column_count, :row_max_index, :column_max_index
 
       def initialize(row_count, column_count)
         super()
@@ -33,11 +34,7 @@ module Bauk
         []
       end
 
-      def map=(map)
-        @map = map
-      end
-
-      # TODO this logic
+      # TODO: this logic
       def update
         new_map = generate_map
         @map.each_with_index do |row, row_index|
@@ -53,12 +50,12 @@ module Bauk
         end
         new_map
       end
-      
+
       def update!
         @map = update
       end
 
-      def update_item(row_index, column_index, cell, new_map, old_map)
+      def update_item(_row_index, _column_index, _cell, _new_map, _old_map)
         nil
       end
 

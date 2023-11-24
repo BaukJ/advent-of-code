@@ -17,7 +17,8 @@ module Bauk
           def generate_cell(row, column)
             if row.zero? || row == row_max_index then "#"
             elsif column.zero? || column == column_max_index then "#"
-            else []
+            else
+              []
             end
           end
 
@@ -99,7 +100,8 @@ module Bauk
           end
 
           def is_free?(row, column)
-            return @map[row][column] if @booleanized
+            return @map[row][column] if @booleanized && (row <= row_max_index) && (column <= column_max_index)
+
             empty? row, column
           end
 

@@ -19,6 +19,7 @@ module Bauk
             @terminated_dead_ends = 0
             @terminated_too_long = 0
             @active_paths = 0
+            @go_back = false
           end
 
           def run
@@ -26,6 +27,20 @@ module Bauk
             @start_time = Time.now
             logger.warn("Starting run")
             turn(0, 1)
+            logger.warn("Heading back now")
+            @go_back = true
+            @moves = {}
+            @step_count = nil
+            steps = @steps
+            @steps = nil
+            turn(@maps[0].row_max_index, @maps[0].column_max_index - 1, steps, steps.length)
+            logger.warn("Heading there again")
+            @go_back = false
+            @moves = {}
+            @step_count = nil
+            steps = @steps
+            @steps = nil
+            turn(0, 1, steps, steps.length)
             # rounds()
             logger.warn "Finished in #{time_taken}"
             if @steps
@@ -154,9 +169,9 @@ module Bauk
           end
 
           def finished?(map, row, column, steps, step_count)
-            if row == map.row_max_index && column == map.column_max_index - 1
-              return false if @step_count&.<= step_count # Ignore finished paths that are no shorter
+            return false if @step_count&.<= step_count # Ignore finished paths that are no shorter
 
+            if (!@go_back && row == map.row_max_index && column == map.column_max_index - 1) || (@go_back && row.zero? && column == 1)
               @steps = steps
               @step_count = steps.length
               return true
@@ -164,20 +179,20 @@ module Bauk
             false
           end
 
-          def give_up?(map, row, column, _steps, step_count)
-            Opts.max_steps = @step_count || Opts.max_steps # Use the lowest found path or max steps
+          def give_up?(_map, row, column, _steps, step_count)
+            max_steps = @step_count || Opts.max_steps # Use the lowest found path or max steps
             @moves ||= {}
             move_key = "#{step_count}_#{row}_#{column}"
-            if step_count >= Opts.max_steps
+            if step_count >= max_steps
               logger.info do
-                "Too many steps taken: #{step_count} [max allowed: #{Opts.max_steps}, shortest found path: #{@steps_count}]"
+                "Too many steps taken: #{step_count} [max allowed: #{max_steps}, shortest found path: #{@steps_count}]"
               end
               @terminated_too_long += 1
-            elsif (Opts.max_steps - step_count) < (map.row_max_index - row) + (map.column_max_index - 1 - column) # Last row, second to last column
-              logger.info do
-                "Would hit the max allowed steps: [max allowed: #{Opts.max_steps}, shortest found path: #{@steps_count}]"
-              end
-              @terminated_too_long += 1
+            # elsif (max_steps - step_count) < (map.row_max_index - row) + (map.column_max_index - 1 - column) # Last row, second to last column
+            #   logger.info do
+            #     "Would hit the max allowed steps: [max allowed: #{max_steps}, shortest found path: #{@steps_count}]"
+            #   end
+            #   @terminated_too_long += 1
             elsif @moves[move_key]
               logger.info do
                 "Hit an already taken path: #{move_key}"
@@ -189,29 +204,50 @@ module Bauk
             true
           end
 
+          def generate_movements(row, column)
+            m = {
+              r: {
+                step: :r,
+                row: row,
+                column: column + 1
+              },
+              l: {
+                step: :l,
+                row: row,
+                column: column - 1
+              },
+              u: {
+                step: :u,
+                row: row - 1,
+                column: column
+              },
+              d: {
+                step: :d,
+                row: row + 1,
+                column: column
+              },
+              s: {
+                step: :s,
+                row: row,
+                column: column
+              }
+            }
+            if @go_back
+              %i[l u s r d].map { |direction| m[direction] }
+            else
+              %i[r d s l u].map { |direction| m[direction] }
+            end
+          end
+
           def move(row, column, steps, step_count)
             new_step_count = step_count + 1
             map = @maps[new_step_count]
             moved = false
-            if map.is_free?(row, column + 1) # right
-              turn(row, column + 1, steps + [:r], new_step_count)
-              moved = true
-            end
-            if map.is_free?(row + 1, column) # down
-              turn(row + 1, column, steps + [:d], new_step_count)
-              moved = true
-            end
-            if map.is_free?(row, column) # stand still / stop
-              turn(row, column, steps + [:s], new_step_count)
-              moved = true
-            end
-            if map.is_free?(row, column - 1) # left
-              turn(row, column - 1, steps + [:l], new_step_count)
-              moved = true
-            end
-            if map.is_free?(row - 1, column) # up
-              turn(row - 1, column, steps + [:u], new_step_count)
-              moved = true
+            generate_movements(row, column).each do |move|
+              if map.is_free?(move[:row], move[:column])
+                turn(move[:row], move[:column], steps + [move[:step]], new_step_count)
+                moved = true
+              end
             end
             moved
           end
