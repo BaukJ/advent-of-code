@@ -6,6 +6,7 @@ module Bauk
   module AdventOfCode
     module Year${YEAR}
       module Challenge${CHALLENGE}
+        # Challenge for ${YEAR}/${CHALLENGE}
         class Challenge < BaseChallenge
           def initialize
             super

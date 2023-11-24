@@ -6,6 +6,7 @@ module Bauk
   module AdventOfCode
     module Year2022
       module Challenge1
+        # Challenge for 2022/1
         class Challenge < BaseChallenge
           def initialize
             super

@@ -44,7 +44,7 @@ module Bauk
             else
               column[0]
             end
-          end.join("")
+          end.join
         end.join("\n")
       end
 

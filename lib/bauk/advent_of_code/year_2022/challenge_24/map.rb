@@ -6,6 +6,7 @@ module Bauk
   module AdventOfCode
     module Year2022
       module Challenge24
+        # Map for challenge 24
         class Map < BaseMap
           def initialize(rows, columns)
             super(rows, columns)
@@ -15,21 +16,21 @@ module Bauk
           end
 
           def generate_cell(row, column)
-            if row.zero? || row == row_max_index then "#"
-            elsif column.zero? || column == column_max_index then "#"
+            if (row.zero? || row == row_max_index) || (column.zero? || column == column_max_index)
+              "#"
             else
               []
             end
           end
 
           def insert(row, column, item)
-            if item != "o"
+            if item == "o"
+              raise "Attempting to put person in non-free spot!" unless free? row, column
+            else
               row = 1 if row >= @row_max_index
               column = 1 if column >= @column_max_index
               row = @row_max_index - 1 if row.zero?
               column = @column_max_index - 1 if column.zero?
-            else
-              raise "Attempting to put person in non-free spot!" unless is_free? row, column
             end
             if @booleanized
               @map[row][column] = item
@@ -45,21 +46,20 @@ module Bauk
           def to_s
             @map.map do |row|
               row.map do |column|
-                if column == true then " "
+                if column == true || column.empty? then " "
                 elsif column == false then "X"
-                elsif column.empty? then " "
                 elsif [["o"], "o"].include?(column) then "\e[48;5;10mo\e[0m"
                 elsif column.length > 1 then column.length
                 else
                   column[0]
                 end
-              end.join("")
+              end.join
             end.join("\n")
           end
 
           def self.from_s(string)
             items = string.split("\n").map do |row|
-              row.split("").map do |i|
+              row.chars.map do |i|
                 if i == "." then []
                 elsif i == "#" then i
                 else
@@ -99,13 +99,13 @@ module Bauk
             new_map
           end
 
-          def is_free?(row, column)
+          def free?(row, column)
             return @map[row][column] if @booleanized && (row <= row_max_index) && (column <= column_max_index)
 
             empty? row, column
           end
 
-          # This makes the map almost unreadable, but speeds up the is_free check
+          # This makes the map almost unreadable, but speeds up the free check
           # It changes each item to just a true or false value, true if the space is free
           def booleanize!
             @booleanized = true

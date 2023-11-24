@@ -6,10 +6,8 @@ module Bauk
   module AdventOfCode
     module Year${YEAR}
       module Challenge${CHALLENGE}
+        # Map for ${YEAR}/${CHALLENGE}
         class Map < BaseMap
-          def initialize(rows, columns)
-            super(rows, columns)
-          end
         end
       end
     end

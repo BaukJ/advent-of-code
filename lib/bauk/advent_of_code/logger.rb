@@ -7,15 +7,23 @@ module Bauk
   module AdventOfCode
     # Mixin providing the logging framework for this gem
     module Logger
-      # @@logger = ::Logger.new(STDOUT)
-      @@logger = nil
+      # Provide one logger for the whole program
+      class Singleton
+        attr_reader :logger
+
+        def initialize
+          @logger = ::Logger.new($stdout)
+          @logger.level = ::Logger::WARN
+          logger.warn "Creating logger"
+        end
+
+        def self.instance
+          @instance ||= Singleton.new
+        end
+      end
 
       def logger
-        unless @@logger
-          @@logger = ::Logger.new($stdout)
-          @@logger.level = ::Logger::WARN
-        end
-        @@logger
+        @logger ||= Singleton.instance.logger
       end
 
       def die(message)

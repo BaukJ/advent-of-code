@@ -2,7 +2,7 @@
 
 require "optparse"
 require_relative "base_class"
-Dir[File.join(__dir__, "year_*", "challenge_*", "*.rb")].sort.each { |file| require file }
+Dir[File.join(__dir__, "year_*", "challenge_*", "*.rb")].each { |file| require file }
 
 module Bauk
   module AdventOfCode

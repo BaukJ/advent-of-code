@@ -6,6 +6,7 @@ module Bauk
   module AdventOfCode
     module Year2022
       module Challenge24
+        # Challenge runner class
         class Challenge < BaseChallenge
           def initialize
             super
@@ -19,29 +20,14 @@ module Bauk
             @terminated_dead_ends = 0
             @terminated_too_long = 0
             @active_paths = 0
-            @go_back = false
           end
 
           def run
             generate_maps(Opts.max_steps + 2) # Plus 2 just to be safe instead of putting in more complex logic
             @start_time = Time.now
-            logger.warn("Starting run")
-            turn(0, 1)
-            logger.warn("Heading back now")
-            @go_back = true
-            @moves = {}
-            @step_count = nil
-            steps = @steps
-            @steps = nil
-            turn(@maps[0].row_max_index, @maps[0].column_max_index - 1, steps, steps.length)
-            logger.warn("Heading there again")
-            @go_back = false
-            @moves = {}
-            @step_count = nil
-            steps = @steps
-            @steps = nil
-            turn(0, 1, steps, steps.length)
-            # rounds()
+            run_there
+            run_back
+            run_there
             logger.warn "Finished in #{time_taken}"
             if @steps
               logger.warn "SUCCESS. Finished parsing and found the quickest path in #{@steps.length} steps: #{@steps}"
@@ -50,6 +36,26 @@ module Bauk
             else
               logger.warn "FAILURE: Could not find a route in only #{Opts.max_steps} steps (#{@terminated_dead_ends} dead ends and #{@terminated_too_long} too long)"
             end
+          end
+
+          def run_there
+            logger.warn("Heading there")
+            @go_back = false
+            @moves = {}
+            @step_count = nil
+            steps = @steps
+            @steps = nil
+            turn(0, 1, steps, steps.length || 0)
+          end
+
+          def run_back
+            logger.warn("Heading back now")
+            @go_back = true
+            @moves = {}
+            @step_count = nil
+            steps = @steps
+            @steps = nil
+            turn(@maps[0].row_max_index, @maps[0].column_max_index - 1, steps, steps.length)
           end
 
           def generate_maps(count)
@@ -116,19 +122,19 @@ module Bauk
                 logger.warn "SUCCESS: steps=#{itteration} in #{time_taken}"
                 return []
               else
-                if mew_map.is_free?(path[:row], path[:column] + 1) # right
+                if mew_map.free?(path[:row], path[:column] + 1) # right
                   new_paths << { row: path[:row], column: path[:column] + 1, steps: path[:steps] + [:r] }
                 end
-                if mew_map.is_free?(path[:row] + 1, path[:column]) # down
+                if mew_map.free?(path[:row] + 1, path[:column]) # down
                   new_paths << { row: path[:row] + 1, column: path[:column], steps: path[:steps] + [:d] }
                 end
-                if mew_map.is_free?(path[:row], path[:column]) # stand still / stop
+                if mew_map.free?(path[:row], path[:column]) # stand still / stop
                   new_paths << { row: path[:row], column: path[:column], steps: path[:steps] + [:s] }
                 end
-                if mew_map.is_free?(path[:row], path[:column] - 1) # left
+                if mew_map.free?(path[:row], path[:column] - 1) # left
                   new_paths << { row: path[:row], column: path[:column] - 1, steps: path[:steps] + [:l] }
                 end
-                if mew_map.is_free?(path[:row] - 1, path[:column]) # up
+                if mew_map.free?(path[:row] - 1, path[:column]) # up
                   new_paths << { row: path[:row] - 1, column: path[:column], steps: path[:steps] + [:u] }
                 end
               end
@@ -208,28 +214,28 @@ module Bauk
             m = {
               r: {
                 step: :r,
-                row: row,
+                row:,
                 column: column + 1
               },
               l: {
                 step: :l,
-                row: row,
+                row:,
                 column: column - 1
               },
               u: {
                 step: :u,
                 row: row - 1,
-                column: column
+                column:
               },
               d: {
                 step: :d,
                 row: row + 1,
-                column: column
+                column:
               },
               s: {
                 step: :s,
-                row: row,
-                column: column
+                row:,
+                column:
               }
             }
             if @go_back
@@ -244,7 +250,7 @@ module Bauk
             map = @maps[new_step_count]
             moved = false
             generate_movements(row, column).each do |move|
-              if map.is_free?(move[:row], move[:column])
+              if map.free?(move[:row], move[:column])
                 turn(move[:row], move[:column], steps + [move[:step]], new_step_count)
                 moved = true
               end
