@@ -51,14 +51,14 @@ module Bauk
 
       def parse_challenge(year, challenge, options)
         challenge_module = get_challenge_module(year, challenge)
+        add_challenge_opts_map challenge_module, year, challenge
+        parse_challenge_options(challenge_module, options, year, challenge)
         begin
           challenge_class = challenge_module.const_get("Challenge").new
         rescue NameError => e
           logger.error "Year/Challenge of #{year}/#{challenge} did not bring back a challenge class"
           raise e
         end
-        add_challenge_opts_map challenge_module, year, challenge
-        parse_challenge_options(challenge_module, options, year, challenge)
         challenge_class.run
       end
 
