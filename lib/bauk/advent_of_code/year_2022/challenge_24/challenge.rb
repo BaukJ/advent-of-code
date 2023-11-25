@@ -45,7 +45,7 @@ module Bauk
             @step_count = nil
             steps = @steps
             @steps = nil
-            turn(0, 1, steps, steps.length || 0)
+            turn(0, 1, steps || [], steps&.length || 0)
           end
 
           def run_back

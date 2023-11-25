@@ -38,7 +38,7 @@ module Bauk
       end
 
       def parse(options)
-        @parser.order_recognized!(options)
+        # @parser.order_recognized!(options) # Don't do this first, so -h will show all options
         if options.length < 2
           die "You need to pass the year and challenge"
           puts @parser
@@ -57,11 +57,12 @@ module Bauk
           logger.error "Year/Challenge of #{year}/#{challenge} did not bring back a challenge class"
           raise e
         end
-        parse_challenge_options(challenge_module, options)
+        add_challenge_opts_map challenge_module, year, challenge
+        parse_challenge_options(challenge_module, options, year, challenge)
         challenge_class.run
       end
 
-      def parse_challenge_options(challenge_module, options)
+      def parse_challenge_options(challenge_module, options, year, challenge)
         challenge_options = challenge_module.const_get "Options"
         challenge_options.parse(@parser)
       rescue NameError => e
@@ -69,6 +70,18 @@ module Bauk
         logger.info "Options not found for #{year}/#{challenge}"
       ensure
         @parser.parse!(options)
+      end
+
+      def add_challenge_opts_map(challenge_module, year, challenge)
+        challenge_opts = challenge_module.const_get "Opts"
+        challenge_opts.to_h.each do |key, default_value|
+          @parser.on("--#{key.to_s.gsub "_", "-"}=VALUE", default_value.class) do |value|
+              challenge_opts[key] = value
+            end
+        end
+      rescue NameError => e
+        logger.info "OptsMap not found for #{year}/#{challenge}"
+        raise e
       end
 
       def get_challenge_module(year, challenge)

@@ -8,15 +8,6 @@ module Bauk
       module Challenge1
         Opts = Struct.new(:map_file)
                      .new("map.txt")
-
-        # Options for 2022/1
-        module Options
-          def self.parse(opts)
-            opts.on("--map-file=FILE") do |file|
-              Opts.map_file = file
-            end
-          end
-        end
       end
     end
   end
