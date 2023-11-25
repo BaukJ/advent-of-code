@@ -6,8 +6,8 @@ module Bauk
   module AdventOfCode
     module Year2022
       module Challenge1
-        Opts = Struct.new(:map_file)
-                     .new("map.txt")
+        Opts = Struct.new(:file)
+                     .new("data.txt")
       end
     end
   end

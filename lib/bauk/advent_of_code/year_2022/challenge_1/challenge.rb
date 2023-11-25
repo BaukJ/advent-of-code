@@ -8,16 +8,28 @@ module Bauk
       module Challenge1
         # Challenge for 2022/1
         class Challenge < BaseChallenge
-          def initialize
-            super
-            # @base_map = Map.from_s(File.read(File.join(__dir__, Opts.map_file)))
-            @base_map = Map.new(10, 10)
-            @maps = [@base_map]
+          def run
+            list = File.readlines File.join(__dir__, Opts.file)
+            parse_list list
+            logger.warn "Callories for top elf: #{@elves.max}"
+            top_3 = @elves.sort[-3..-1].inject(0) { |o, e| o + e }
+            logger.warn "Callories for top 3 elves: #{top_3}"
           end
 
-          def run
-            logger.warn("Starting challenge #{self.class.name}")
-            puts @maps
+          def parse_list(list)
+            @elves = []
+            elf = 0
+            list.map(&:chomp).each do |line|
+              logger.debug line
+              if line.empty?
+                logger.info "Elf total: #{elf}"
+                @elves << elf if elf
+                elf = 0
+              else
+                elf += line.to_i
+              end
+            end
+            @elves << elf
           end
         end
       end
