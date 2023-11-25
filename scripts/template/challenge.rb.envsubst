@@ -10,14 +10,12 @@ module Bauk
         class Challenge < BaseChallenge
           def initialize
             super
-            # @base_map = Map.from_s(File.read(File.join(__dir__, Opts.map_file)))
-            @base_map = Map.new(10, 10)
-            @maps = [@base_map]
+            @lines = File.readlines File.join(__dir__, Opts.file), chomp: true
           end
 
           def run
             logger.warn("Starting challenge #{self.class.name}")
-            puts @maps
+            puts @lines
           end
         end
       end
