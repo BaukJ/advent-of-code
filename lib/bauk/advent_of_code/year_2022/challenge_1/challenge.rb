@@ -12,7 +12,7 @@ module Bauk
             list = File.readlines File.join(__dir__, Opts.file)
             parse_list list
             logger.warn "Callories for top elf: #{@elves.max}"
-            top_3 = @elves.sort[-3..-1].inject(0) { |o, e| o + e }
+            top_3 = @elves.sort[-3..].inject(0) { |o, e| o + e }
             logger.warn "Callories for top 3 elves: #{top_3}"
           end
 

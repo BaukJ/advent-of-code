@@ -20,7 +20,7 @@ module Bauk
           end
 
           def calculate_score(their, our)
-            die "Invalid opponent option: [#{their}]" unless ["A", "B", "C"].include? their
+            die "Invalid opponent option: [#{their}]" unless %w[A B C].include? their
             case their
             when "A" then calculate_rock(our)
             when "B" then calculate_paper(our)

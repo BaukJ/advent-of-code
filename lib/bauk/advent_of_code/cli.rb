@@ -76,8 +76,8 @@ module Bauk
         challenge_opts = challenge_module.const_get "Opts"
         challenge_opts.to_h.each do |key, default_value|
           @parser.on("--#{key.to_s.gsub "_", "-"}=VALUE", default_value.class) do |value|
-              challenge_opts[key] = value
-            end
+            challenge_opts[key] = value
+          end
         end
       rescue NameError => e
         logger.info "OptsMap not found for #{year}/#{challenge}"

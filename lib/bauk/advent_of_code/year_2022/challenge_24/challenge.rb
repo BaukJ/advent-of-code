@@ -70,9 +70,9 @@ module Bauk
           def show_path(path)
             row = 0
             column = 1
-            path.each_with_index do |path, index|
+            path.each_with_index do |step, index|
               map = @maps[index]
-              case path
+              case step
               when :u then row -= 1
               when :d then row += 1
               when :l then column -= 1
