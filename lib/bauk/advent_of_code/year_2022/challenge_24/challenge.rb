@@ -31,7 +31,7 @@ module Bauk
             logger.warn "Finished in #{time_taken}"
             if @steps
               logger.warn "SUCCESS. Finished parsing and found the quickest path in #{@steps.length} steps: #{@steps}"
-              show_path(@steps) if Opts.show_map
+              show_path(@steps) if Opts.show_final_map
               logger.warn "SUCCESS. Finished parsing and found the quickest path in #{@steps.length} steps: #{@steps}"
             else
               logger.warn "FAILURE: Could not find a route in only #{Opts.max_steps} steps (#{@terminated_dead_ends} dead ends and #{@terminated_too_long} too long)"
@@ -71,7 +71,7 @@ module Bauk
             row = 0
             column = 1
             path.each_with_index do |step, index|
-              map = @maps[index]
+              map = @maps[index+1] # first map is initial map
               case step
               when :u then row -= 1
               when :d then row += 1
@@ -80,15 +80,16 @@ module Bauk
               end
               map.insert(row, column, "o")
               puts map
+              map.remove(row, column, "o")
               sleep Opts.show_map_sleep
             end
           end
 
           def turn(row, column, steps = [], step_count = 0)
             map = @maps[step_count]
-            if Opts.show_map
+            if Opts.show
               puts "TURN: #{steps.length}"
-              map.insert(row, column, "o")
+              map.insert(row, column, "o") unless step_count == 0 # as it has an o there
               puts map
               sleep Opts.show_map_sleep
               map.unset(row, column)
