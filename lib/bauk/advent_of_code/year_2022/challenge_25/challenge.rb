@@ -30,13 +30,13 @@ module Bauk
             snafu.reverse.chars.each_with_index do |identifier, index|
               modifier = case identifier
                          when "1" then 1
-              when "2" then 2
-              when "0" then 0
-              when "-" then -1
-              when "=" then -2
-              else die "Invalid snafu identifier: #{identifier}"
-              end
-            integer += modifier * 5**index
+                         when "2" then 2
+                         when "0" then 0
+                         when "-" then -1
+                         when "=" then -2
+                         else die "Invalid snafu identifier: #{identifier}"
+                         end
+              integer += modifier * (5**index)
             end
             integer
           end
@@ -51,21 +51,15 @@ module Bauk
             snafu.each_with_index do |number, index|
               next unless number >= 3
 
-              snafu[index+1] ||= 0
-              snafu[index+1] += 1
+              snafu[index + 1] ||= 0
+              snafu[index + 1] += 1
               snafu[index] -= 5
             end
-            snafu.map! { |n| case n; when -1 then "-"; when -2 then "="; else n; end}
-            snafu.reverse.join()
+            snafu.map! { |n| case n; when -1 then "-"; when -2 then "="; else n; end }
+            snafu.reverse.join
           end
         end
       end
     end
-  end
-end
-
-class Integer
-  def to_snafu
-    "A"
   end
 end

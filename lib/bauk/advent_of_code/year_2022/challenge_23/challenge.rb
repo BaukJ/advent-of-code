@@ -60,19 +60,19 @@ module Bauk
 
           def chomp_map
             loop do
-              if !@map.row(0).flatten.any?
+              if @map.row(0).flatten.none?
                 @map.delete_row(0)
-              elsif !@map.row(-1).flatten.any?
+              elsif @map.row(-1).flatten.none?
                 @map.delete_row(-1)
-              elsif !@map.column(0).flatten.any?
+              elsif @map.column(0).flatten.none?
                 @map.delete_column(0)
-              elsif !@map.column(-1).flatten.any?
+              elsif @map.column(-1).flatten.none?
                 @map.delete_column(-1)
               else
                 break
               end
             end
-          end 
+          end
         end
       end
     end

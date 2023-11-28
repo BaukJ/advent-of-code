@@ -50,9 +50,7 @@ module Bauk
       end
 
       def insert(row, column, item, allow_multiples: @allow_multiples)
-        if @map[row][column].include?(item) && !allow_multiples
-          die "Item '#{item}' already exists in cell #{row}/#{column} [#{@map[row][column].inspect}]"
-        end
+        die "Item '#{item}' already exists in cell #{row}/#{column} [#{@map[row][column].inspect}]" if @map[row][column].include?(item) && !allow_multiples
         @map[row][column] << item
       end
 
@@ -141,8 +139,8 @@ module Bauk
       def to_s_with_border
         [
           "-" * (@column_count + 2),
-          "|" + to_s.split("\n").join("|\n|") + "|",
-          "-" * (@column_count + 2),
+          "|#{to_s.split("\n").join("|\n|")}|",
+          "-" * (@column_count + 2)
         ].join("\n")
       end
 
@@ -167,7 +165,7 @@ module Bauk
       end
 
       def delete_column(index = -1)
-        rows.each_with_index do |row, row_index|
+        rows.each_with_index do |row, _row_index|
           row.delete_at(index)
         end
         @column_count -= 1

@@ -71,29 +71,30 @@ module Bauk
             row = 0
             column = 1
             path.each_with_index do |step, index|
-              map = @maps[index+1] # first map is initial map
+              map = @maps[index + 1] # first map is initial map
               case step
               when :u then row -= 1
               when :d then row += 1
               when :l then column -= 1
               when :r then column += 1
               end
-              map.insert(row, column, "o")
-              puts map
-              map.remove(row, column, "o")
-              sleep Opts.show_map_sleep
+              puts_map(map, row, column, index + 1)
             end
+          end
+
+          def puts_map(map, row, column, turn)
+            return unless Opts.show
+
+            puts "TURN: #{turn}"
+            map.insert(row, column, "o")
+            puts map
+            map.remove(row, column, "o")
+            sleep Opts.show_map_sleep
           end
 
           def turn(row, column, steps = [], step_count = 0)
             map = @maps[step_count]
-            if Opts.show
-              puts "TURN: #{steps.length}"
-              map.insert(row, column, "o") unless step_count == 0 # as it has an o there
-              puts map
-              sleep Opts.show_map_sleep
-              map.unset(row, column)
-            end
+            puts_map(map, row, column, steps.length)
             logger.debug { "[#{row},#{column}] steps=#{steps.length}: #{steps}" }
 
             if finished?(map, row, column, steps, step_count)
@@ -153,7 +154,20 @@ module Bauk
             true
           end
 
-          def generate_movements(row, column)
+          def move(row, column, steps, step_count)
+            new_step_count = step_count + 1
+            map = @maps[new_step_count]
+            moved = false
+            generate_movements(row, column).each do |move|
+              if map.free?(move[:row], move[:column])
+                turn(move[:row], move[:column], steps + [move[:step]], new_step_count)
+                moved = true
+              end
+            end
+            moved
+          end
+
+          def generate_movements(row, column) # rubocop:disable Metrics/MethodLength
             m = {
               r: {
                 step: :r,
@@ -186,19 +200,6 @@ module Bauk
             else
               %i[r d s l u].map { |direction| m[direction] }
             end
-          end
-
-          def move(row, column, steps, step_count)
-            new_step_count = step_count + 1
-            map = @maps[new_step_count]
-            moved = false
-            generate_movements(row, column).each do |move|
-              if map.free?(move[:row], move[:column])
-                turn(move[:row], move[:column], steps + [move[:step]], new_step_count)
-                moved = true
-              end
-            end
-            moved
           end
         end
       end

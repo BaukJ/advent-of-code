@@ -12,7 +12,7 @@ module Bauk
 
           def initialize(row_count, column_count)
             super
-            @directions = %i(north south east west)
+            @directions = %i[north south east west]
             @plan_map = nil
             @moves = 0
           end
@@ -33,10 +33,9 @@ module Bauk
 
               new_map.insert available_directions[direction][:row], available_directions[direction][:column], item
               @moves += 1
-              return
-
+              return # rubocop:disable Lint/NonLocalExitFromIterator
             end
-            die "Could not find place to put elf" 
+            die "Could not find place to put elf"
           end
 
           def plan!
@@ -53,14 +52,12 @@ module Bauk
             new_map
           end
 
-          # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
-
           def plan_ok?(row, column)
             # Make sure all the moved he could make all don't have 2 elves
             @plan_map.adjacent_4_cells(row, column).map { |cell| cell.length <= 1 }.all?
           end
 
-          def get_directions(row, column, map = self)
+          def get_directions(row, column, map = self) # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
             n = map.empty? row - 1, column
             ne = map.empty? row - 1, column + 1
             nw = map.empty? row - 1, column - 1
@@ -70,10 +67,10 @@ module Bauk
             se = map.empty? row + 1, column + 1
             sw = map.empty? row + 1, column - 1
             spaces = {
-              north: { empty: ne && n && nw, row: row - 1, column: column },
-              east: { empty: ne && e && se, row: row, column: column + 1 },
-              south: { empty: se && s && sw, row: row + 1, column: column },
-              west: { empty: nw && w && sw, row: row, column: column - 1}
+              north: { empty: ne && n && nw, row: row - 1, column: },
+              east: { empty: ne && e && se, row:, column: column + 1 },
+              south: { empty: se && s && sw, row: row + 1, column: },
+              west: { empty: nw && w && sw, row:, column: column - 1 }
             }
             spaces[:any] = @directions.map { |d| spaces[d][:empty] }.any?
             spaces[:all] = @directions.map { |d| spaces[d][:empty] }.all?
