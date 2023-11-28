@@ -5,8 +5,8 @@ require_relative "../../base_challenge"
 module Bauk
   module AdventOfCode
     module Year2022
-      module Challenge1
-        # Challenge for 2022/1
+      module Challenge01
+        # Challenge for 2022/01
         class Challenge < BaseChallenge
           def run
             list = File.readlines File.join(__dir__, Opts.file)

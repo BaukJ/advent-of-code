@@ -5,7 +5,7 @@ require_relative "../../base_challenge"
 module Bauk
   module AdventOfCode
     module Year2022
-      module Challenge3
+      module Challenge03
         # Challenge for 2022/3
         class Challenge < BaseChallenge
           def initialize
