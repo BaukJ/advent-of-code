@@ -22,7 +22,10 @@ module Bauk
 
       def add_utility_opts(opts)
         opts.on("-v", "Increase verbosity") do
-          logger.level = ::Logger::INFO
+          logger.level = case logger.level
+                         when ::Logger::INFO then ::Logger::DEBUG
+                         else ::Logger::INFO
+                         end
         end
       end
 
@@ -75,19 +78,23 @@ module Bauk
       def add_challenge_opts_map(challenge_module, year, challenge)
         challenge_opts = challenge_module.const_get "Opts"
         challenge_opts.to_h.each do |key, default_value|
-          if default_value == false
-            @parser.on("--#{key.to_s.gsub "_", "-"}", default_value.class) do
-              challenge_opts[key] = true
-            end
-          else
-            @parser.on("--#{key.to_s.gsub "_", "-"}=VALUE", default_value.class) do |value|
-              challenge_opts[key] = value
-            end
-          end
+          add_challenge_opt challenge_opts, key, default_value
         end
       rescue NameError => e
         logger.info "OptsMap not found for #{year}/#{challenge}"
         raise e
+      end
+
+      def add_challenge_opt(challenge_opts, key, default_value)
+        if default_value == false
+          @parser.on("--#{key.to_s.gsub "_", "-"}", default_value.class) do
+            challenge_opts[key] = true
+          end
+        else
+          @parser.on("--#{key.to_s.gsub "_", "-"}=VALUE", default_value.class) do |value|
+            challenge_opts[key] = value
+          end
+        end
       end
 
       def get_challenge_module(year, challenge)

@@ -28,3 +28,6 @@ Metrics/PerceivedComplexity:
 
 Metrics/ClassLength:
   Max: 200
+
+Style/PerlBackrefs:
+  Enabled: false # Allows usage of $1 and $2 for regex groups
