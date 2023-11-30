@@ -32,13 +32,13 @@ module Bauk
             end
             logger.warn "Most scenic tree: #{most_scenic}"
           end
-          
+
           def calculate_scenic_score(row, column)
             height = @map.cell(row, column)[0]
-            left = calculate_visible_trees(@map.line_of_cells([{row: row, column: column}, {row: row, column: 0}])[1..], height)
-            right = calculate_visible_trees(@map.line_of_cells([{row: row, column: column}, {row: row, column: @map.column_max_index}])[1..], height)
-            up = calculate_visible_trees(@map.line_of_cells([{row: row, column: column}, {row: 0, column: column}])[1..], height)
-            down = calculate_visible_trees(@map.line_of_cells([{row: row, column: column}, {row: @map.row_max_index, column: column}])[1..], height)
+            left = calculate_visible_trees(@map.line_of_cells([{ row:, column: }, { row:, column: 0 }])[1..], height)
+            right = calculate_visible_trees(@map.line_of_cells([{ row:, column: }, { row:, column: @map.column_max_index }])[1..], height)
+            up = calculate_visible_trees(@map.line_of_cells([{ row:, column: }, { row: 0, column: }])[1..], height)
+            down = calculate_visible_trees(@map.line_of_cells([{ row:, column: }, { row: @map.row_max_index, column: }])[1..], height)
             logger.info "LEFT: #{left}, right: #{right}, up: #{up}, down: #{down}"
             down * up * left * right
           end
@@ -52,23 +52,23 @@ module Bauk
             end
             count
           end
-          
+
           def find_visible_trees # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
             @visible = {}
             @map.rows.each_with_index do |row, row_index|
               height = -1
               row.flatten.each_with_index do |tree, column_index|
                 next unless tree > height
-                
+
                 height = tree
                 @visible["#{row_index}_#{column_index}"] = true
                 @visible_map.insert(row_index, column_index, "V")
               end
-              
+
               height = -1
               row.flatten.reverse.each_with_index do |tree, column_index|
                 next unless tree > height
-                
+
                 height = tree
                 @visible["#{row_index}_#{@map.column_max_index - column_index}"] = true
                 @visible_map.remove(row_index, @map.column_max_index - column_index, "V")
@@ -80,17 +80,17 @@ module Bauk
               height = -1
               column.flatten.each_with_index do |tree, row_index|
                 next unless tree > height
-                
+
                 height = tree
                 @visible["#{row_index}_#{column_index}"] = true
                 @visible_map.remove(row_index, column_index, "V")
                 @visible_map.insert(row_index, column_index, "V")
               end
-              
+
               height = -1
               column.flatten.reverse.each_with_index do |tree, row_index|
                 next unless tree > height
-                
+
                 height = tree
                 @visible["#{@map.row_max_index - row_index}_#{column_index}"] = true
                 @visible_map.remove(@map.row_max_index - row_index, column_index, "V")

@@ -2,11 +2,9 @@
 
 require "bauk/advent_of_code"
 
+# Disable logging by setting log level to above ERROR/3
 logger = Bauk::AdventOfCode::Logger::Singleton.instance.logger
-puts logger.level
-logger.level = ::Logger::ERROR
 logger.level = 4
-puts logger.level
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

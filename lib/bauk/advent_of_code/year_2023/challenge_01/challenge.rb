@@ -16,6 +16,16 @@ module Bauk
           def run
             logger.warn("Starting challenge #{self.class.name}")
             puts @lines
+            star_one
+            star_two
+          end
+
+          def star_one
+            logger.warn "Start 1 answer: "
+          end
+
+          def star_two
+            logger.warn "Start 1 answer: "
           end
         end
       end
