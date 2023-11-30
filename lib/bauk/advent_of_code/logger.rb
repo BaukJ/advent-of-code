@@ -28,7 +28,7 @@ module Bauk
 
       def die(message)
         logger.error message
-        exit 1
+        raise Error, message
       end
     end
   end

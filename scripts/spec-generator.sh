@@ -4,6 +4,7 @@
 for lib in $(find lib -type f -name '*.rb' \! -path '*/year*')
 do
     spec=${lib/lib/spec}
+    spec=${spec/.rb/_spec.rb}
     if [[ -f "$spec" ]]
     then
         echo "Already created: $spec"
