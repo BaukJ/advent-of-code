@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "base_class"
+require_relative "utils"
 
 module Bauk
   module AdventOfCode
@@ -76,12 +77,36 @@ module Bauk
         @map.inject { |row, obj| row + obj }
       end
 
+      def line_of_cells(points)
+        line = []
+        # We use up to but not including, so if we have multiple points we don't create duplicate cells at the corner
+        points.each_with_object(points[0]) do |point, previous_point|
+          if point[:row] == previous_point[:row]
+            Utils.bidirectional_range(previous_point[:column], point[:column]).each do |column|
+              line << cell(point[:row], column)
+            end
+          elsif point[:column] == previous_point[:column]
+            Utils.bidirectional_range(previous_point[:row], point[:row]).each do |row|
+              line << cell(row, point[:column])
+            end
+          else
+            die "Cannot generate line of cells not in a straight line"
+          end
+        end
+        line << cell(points[-1][:row], points[-1][:column])
+        line
+      end
+
       def cell(row, column)
         @map[row][column]
       end
 
       def rows
         @map
+      end
+
+      def columns
+        (0..@column_max_index).map { |i| column(i) }
       end
 
       def cells_with_indexes
