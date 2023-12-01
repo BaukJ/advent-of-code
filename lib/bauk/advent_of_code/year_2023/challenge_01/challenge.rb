@@ -22,7 +22,7 @@ module Bauk
           def star_one
             @total = 0
             @lines.each do |line|
-              numbers = line.chars.select { |c| c =~ /[0-9]/ }
+              numbers = line.chars.grep(/[0-9]/)
               # logger.debug numbers[0] + numbers[-1]
               @total += (numbers[0] + numbers[-1]).to_i
             end
@@ -54,13 +54,11 @@ module Bauk
                   snum += char
                 end
                 string_nums.each do |string, num|
-                  if snum =~ /#{string}/
-                    # Numbers can overlap! twone
-                    while snum =~ /#{string}/
-                      snum = snum[1..]
-                    end
-                    numbers << num
-                  end
+                  next unless snum =~ /#{string}/
+
+                  # Numbers can overlap! twone
+                  snum = snum[1..] while snum =~ /#{string}/
+                  numbers << num
                 end
               end
               line_num = (numbers[0] + numbers[-1]).to_i
