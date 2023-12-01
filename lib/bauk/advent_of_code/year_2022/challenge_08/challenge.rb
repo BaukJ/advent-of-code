@@ -53,7 +53,7 @@ module Bauk
             count
           end
 
-          def find_visible_trees # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
+          def find_visible_trees # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
             @visible = {}
             @map.rows.each_with_index do |row, row_index|
               height = -1

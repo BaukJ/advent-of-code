@@ -29,7 +29,7 @@ module Bauk
             logger.warn "Start 1 answer: #{@total}"
           end
 
-          def star_two
+          def star_two # rubocop:disable Metrics/AbcSize
             string_nums = {
               "one" => "1",
               "two" => "2",

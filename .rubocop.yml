@@ -18,7 +18,7 @@ Layout/LineLength:
   Max: 165
 
 Metrics/MethodLength:
-  Max: 25
+  Max: 50 # For now, as these challenges have some dirty quick hacks (e.g. large hash data in code)
 
 Metrics/CyclomaticComplexity:
   Max: 10
