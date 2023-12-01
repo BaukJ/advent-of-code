@@ -53,7 +53,7 @@ module Bauk
       def to_s
         @map.map.with_index do |row, row_index|
           row.map.with_index do |column, column_index|
-            if empty?(row_index, column_index) then " "
+            if empty?(row_index, column_index) then "."
             elsif [["o"], "o"].include?(column) then "\e[48;5;10mo\e[0m"
             elsif !column.is_a? Array then column
             elsif column.length > 1 then column.length
@@ -78,13 +78,13 @@ module Bauk
       end
 
       def row(index)
-        raise Error, "Requested invalid column index" if index.negative? || (index > @row_max_index)
+        raise Error, "Requested invalid row index" if index < -@column_max_index || (index > @row_max_index)
 
         @map[index]
       end
 
       def column(index)
-        raise Error, "Requested invalid column index" if index.negative? || (index > @column_max_index)
+        raise Error, "Requested invalid column index" if index < -@column_max_index || (index > @column_max_index)
 
         @map.map do |row|
           row[index]

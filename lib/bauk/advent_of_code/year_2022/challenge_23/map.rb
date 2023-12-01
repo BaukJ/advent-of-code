@@ -12,7 +12,7 @@ module Bauk
 
           def initialize(row_count, column_count)
             super
-            @directions = %i[north south east west]
+            @directions = %i[north south west east]
             @plan_map = nil
             @moves = 0
           end

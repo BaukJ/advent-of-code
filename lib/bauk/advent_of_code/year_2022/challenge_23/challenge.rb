@@ -13,10 +13,13 @@ module Bauk
             super
             @lines = File.readlines File.join(__dir__, Opts.file), chomp: true
             @map = Map.new @lines.length, @lines[0].length
+            @elves_count = 0
             @lines.each_with_index do |row, row_index|
               row.chars.each_with_index do |item, column_index|
                 case item
-                when "#" then @map.insert row_index, column_index, "#"
+                when "#"
+                  @map.insert row_index, column_index, "#"
+                  @elves_count += 1
                 when "." then nil
                 else die "Invalid letter in input map: '#{item}'"
                 end
@@ -30,23 +33,24 @@ module Bauk
             chomp_map
             puts @map.to_s_with_border
             logger.warn "FINISHED: Round: #{@round}, Size: #{@map.row_count} * #{@map.column_count} = #{@map.row_count * @map.column_count}, Moves: #{@map.moves}"
+            logger.warn "Empty spaces = #{@map.row_count * @map.column_count - @elves_count}"
           end
 
           def rounds
             @round = 0
             loop do
               upsize_map
+              puts @map.directions.inspect if Opts.show_map
               @round += 1
-              if Opts.show_map
-                puts @map.directions.inspect
-                puts @map.to_s_with_border
-                sleep 1
-              end
               @map.plan!
               new_map = @map.update
               new_map.rotate_directions
               @map = new_map
-              logger.info "Round: #{@round}, Size: #{@map.row_count} * #{@map.column_count}, Moves: #{@map.moves}"
+              logger.info "End of round: #{@round}, Size: #{@map.row_count} * #{@map.column_count}, Moves: #{@map.moves}"
+              if Opts.show_map
+                puts @map.to_s_with_border
+                sleep 1
+              end
               return if @map.moves.zero? || (!Opts.rounds.zero? && @round >= Opts.rounds)
             end
           end
