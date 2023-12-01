@@ -10,6 +10,20 @@ module Bauk
       attr_accessor :map
       attr_reader :row_count, :column_count, :row_max_index, :column_max_index
 
+      def self.from_file(file)
+        from_lines File.readlines(file, chomp: true)
+      end
+
+      def self.from_lines(lines)
+        map = Map.new lines.length, lines[0].length
+        lines.each_with_index do |line, row|
+          line.chars.each_with_index do |char, column|
+            map.insert row, column, char
+          end
+        end
+        map
+      end
+
       def initialize(row_count, column_count)
         super()
         @row_count = row_count
@@ -64,10 +78,14 @@ module Bauk
       end
 
       def row(index)
+        raise Error, "Requested invalid column index" if index.negative? || (index > @row_max_index)
+
         @map[index]
       end
 
       def column(index)
+        raise Error, "Requested invalid column index" if index.negative? || (index > @column_max_index)
+
         @map.map do |row|
           row[index]
         end

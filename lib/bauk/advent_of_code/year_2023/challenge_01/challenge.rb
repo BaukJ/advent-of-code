@@ -15,17 +15,59 @@ module Bauk
 
           def run
             logger.warn("Starting challenge #{self.class.name}")
-            puts @lines
-            star_one
+            # star_one
             star_two
           end
 
           def star_one
-            logger.warn "Start 1 answer: "
+            @total = 0
+            @lines.each do |line|
+              numbers = line.chars.select { |c| c =~ /[0-9]/ }
+              # logger.debug numbers[0] + numbers[-1]
+              @total += (numbers[0] + numbers[-1]).to_i
+            end
+            logger.warn "Start 1 answer: #{@total}"
           end
 
           def star_two
-            logger.warn "Start 1 answer: "
+            string_nums = {
+              "one" => "1",
+              "two" => "2",
+              "three" => "3",
+              "four" => "4",
+              "five" => "5",
+              "six" => "6",
+              "seven" => "7",
+              "eight" => "8",
+              "nine" => "9"
+            }
+
+            @total = 0
+            @lines.each do |line|
+              numbers = []
+              snum = ""
+              line.chars.each do |char|
+                if char =~ /[0-9]/
+                  numbers << char
+                  snum = ""
+                else
+                  snum += char
+                end
+                string_nums.each do |string, num|
+                  if snum =~ /#{string}/
+                    # Numbers can overlap! twone
+                    while snum =~ /#{string}/
+                      snum = snum[1..]
+                    end
+                    numbers << num
+                  end
+                end
+              end
+              line_num = (numbers[0] + numbers[-1]).to_i
+              logger.debug "#{line} => #{numbers} => #{line_num}"
+              @total += line_num
+            end
+            logger.warn "Start 1 answer: #{@total}"
           end
         end
       end
