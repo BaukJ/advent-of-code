@@ -43,7 +43,7 @@ module Bauk
             return if numbers_map.size != 2
 
             puts numbers_map.values.inspect
-            @gears << numbers_map.values.inject(1) { |x,y| x * y }
+            @gears << numbers_map.values.inject(1) { |x, y| x * y }
           end
 
           def get_number_with_rc(row, column)
@@ -56,7 +56,7 @@ module Bauk
               number = cell[0] + number
               start_column = c
             end
-            ((column+1)..@map.column_max_index).to_a.each do |c|
+            ((column + 1)..@map.column_max_index).to_a.each do |c|
               cell = @map.cell(row, c)
               break if cell.empty? || cell[0] !~ /[0-9]/
 

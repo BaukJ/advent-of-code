@@ -50,7 +50,7 @@ module Bauk
             total = 0
             @lines.each do |line|
               game += 1
-              mins = {"blue" => 0, "green" => 0, "red" => 0}
+              mins = { "blue" => 0, "green" => 0, "red" => 0 }
               line.split(/; */).each do |go|
                 go.split(/, */).each do |get|
                   die "Invalid get: #{get}" unless get =~ /^([0-9]+) ([a-z]*)$/
@@ -59,7 +59,7 @@ module Bauk
                   mins[$2] = $1.to_i if $1.to_i > mins[$2]
                 end
               end
-              total += mins.values.inject(1) { |x,y| x * y }
+              total += mins.values.inject(1) { |x, y| x * y }
               logger.debug line
             end
             logger.warn "Star two answer: #{total}"
