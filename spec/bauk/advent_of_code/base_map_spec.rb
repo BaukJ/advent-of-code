@@ -39,5 +39,12 @@ RSpec.describe Bauk::AdventOfCode::BaseMap do # rubocop:disable Metrics/BlockLen
       expect(map.column(6)).to eq(%w[g G 7 u j m].map { |i| [i] })
       expect { map.column(7) }.to raise_error Bauk::AdventOfCode::Error
     end
+
+    it "loads rows correctly" do
+      expect(map.rows.length).to eq 7
+      expect(map.row(0)).to eq(%w[a A 1 q a z].map { |i| [i] })
+      expect(map.row(6)).to eq(%w[g G 7 u j m].map { |i| [i] })
+      expect { map.row(7) }.to raise_error Bauk::AdventOfCode::Error
+    end
   end
 end

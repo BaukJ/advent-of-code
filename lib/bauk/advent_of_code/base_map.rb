@@ -15,9 +15,11 @@ module Bauk
       end
 
       def self.from_lines(lines)
-        map = Map.new lines.length, lines[0].length
+        map = new lines.length, lines[0].length
         lines.each_with_index do |line, row|
           line.chars.each_with_index do |char, column|
+            next if char == "."
+
             map.insert row, column, char
           end
         end
@@ -95,6 +97,16 @@ module Bauk
         @map.inject { |row, obj| row + obj }
       end
 
+      def cells_with_row_column
+        ret = []
+        @map.each_with_index do |row, row_index|
+          row.each_with_index do |char, column_index|
+            ret << [char, row_index, column_index]
+          end
+        end
+        ret
+      end
+
       def line_of_cells(points)
         line = []
         # We use up to but not including, so if we have multiple points we don't create duplicate cells at the corner
@@ -170,12 +182,25 @@ module Bauk
         row_index < row_count && column_index < column_count && @map[row_index][column_index].empty?
       end
 
-      def adjacent_4_cells(row_index, column_index)
+      def adjacent_4_cells_with_row_column(row_index, column_index)
         adjacent = []
-        adjacent << cell(row_index, column_index + 1) unless column_index >= @column_max_index
-        adjacent << cell(row_index, column_index - 1) unless column_index <= 0
-        adjacent << cell(row_index + 1, column_index) unless row_index >= @row_max_index
-        adjacent << cell(row_index - 1, column_index) unless row_index <= 0
+        adjacent << cell_with_row_column(row_index, column_index + 1) unless column_index >= @column_max_index
+        adjacent << cell_with_row_column(row_index, column_index - 1) unless column_index <= 0
+        adjacent << cell_with_row_column(row_index + 1, column_index) unless row_index >= @row_max_index
+        adjacent << cell_with_row_column(row_index - 1, column_index) unless row_index <= 0
+        adjacent
+      end
+
+      def cell_with_row_column(row_index, column_index)
+        [cell(row_index, column_index), row_index, column_index]
+      end
+
+      def adjacent_8_cells_with_row_column(row_index, column_index)
+        adjacent = adjacent_4_cells_with_row_column(row_index, column_index)
+        adjacent << cell_with_row_column(row_index + 1, column_index + 1) unless row_index >= @row_max_index || column_index >= @column_max_index
+        adjacent << cell_with_row_column(row_index + 1, column_index - 1) unless row_index >= @row_max_index || column_index <= 0
+        adjacent << cell_with_row_column(row_index - 1, column_index + 1) unless row_index <= 0 || column_index >= @column_max_index
+        adjacent << cell_with_row_column(row_index - 1, column_index - 1) unless row_index <= 0 || column_index <= 0
         adjacent
       end
 
