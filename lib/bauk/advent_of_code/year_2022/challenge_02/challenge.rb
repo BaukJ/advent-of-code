@@ -9,14 +9,27 @@ module Bauk
         # Challenge for 2022/2
         class Challenge < BaseChallenge
           def run
-            lines = File.readlines File.join(__dir__, Opts.file), chomp: true
+            @star_two = false
+            @lines = File.readlines File.join(__dir__, Opts.file), chomp: true
             @total = 0
-            lines.each do |line|
+            @lines.each do |line|
               items = line.split(/ */)
               die "Wrong number of items! (#{items.inspect})" unless items.length == 2
               @total += calculate_score(*items)
             end
             logger.warn "Part one: #{@total}"
+            star_two
+          end
+
+          def star_two
+            @star_two = true
+            @total = 0
+            @lines.each do |line|
+              items = line.split(/ */)
+              die "Wrong number of items! (#{items.inspect})" unless items.length == 2
+              @total += calculate_score(*items)
+            end
+            logger.warn "Part two: #{@total}"
           end
 
           def calculate_score(their, our)
@@ -30,25 +43,25 @@ module Bauk
 
           def calculate_rock(our)
             case our
-            when "X" then 1 + 3
-            when "Y" then 2 + 6
-            when "Z" then 3 + 0
+            when "X" then @star_two ? 3 + 0 : 1 + 3
+            when "Y" then @star_two ? 1 + 3 : 2 + 6
+            when "Z" then @star_two ? 2 + 6 : 3 + 0
             end
           end
 
           def calculate_paper(our)
             case our
-            when "X" then 1 + 0
-            when "Y" then 2 + 3
-            when "Z" then 3 + 6
+            when "X" then @star_two ? 1 + 0 : 1 + 0
+            when "Y" then @star_two ? 2 + 3 : 2 + 3
+            when "Z" then @star_two ? 3 + 6 : 3 + 6
             end
           end
 
           def calculate_scissors(our)
             case our
-            when "X" then 1 + 6
-            when "Y" then 2 + 0
-            when "Z" then 3 + 3
+            when "X" then @star_two ? 2 + 0 : 1 + 6
+            when "Y" then @star_two ? 3 + 3 : 2 + 0
+            when "Z" then @star_two ? 1 + 6 : 3 + 3
             end
           end
         end
