@@ -16,7 +16,7 @@ module Bauk
               die "Wrong number of items! (#{items.inspect})" unless items.length == 2
               @total += calculate_score(*items)
             end
-            logger.warn "Total score: #{@total}"
+            logger.warn "Part one: #{@total}"
           end
 
           def calculate_score(their, our)
