@@ -19,19 +19,19 @@ module Bauk
             star_two
           end
 
-          def star_one #rubocop:disable
+          def star_one # rubocop:disable Metrics/AbcSize
             @total_count = 0
             counts = {}
             @total = 0
             @lines.each_with_index do |line, index|
               counts[index] ||= 1
-              die "Invalid line: #{line}" unless line.sub! /^Card  *#{index + 1}: /, ""
+              die "Invalid line: #{line}" unless line.sub!(/^Card  *#{index + 1}: /, "")
 
               winning_numbers = line.split("|")[0].split
               my_numbers = line.split("|")[1].split
               won_numbers = winning_numbers & my_numbers
-              logger.debug { "Won numbers: #{won_numbers}"}
-              if !won_numbers.empty?
+              logger.debug { "Won numbers: #{won_numbers}" }
+              unless won_numbers.empty?
                 @total += 2**(won_numbers.length - 1)
                 (1..won_numbers.length).each do |n|
                   counts[index + n] ||= 1
@@ -39,7 +39,7 @@ module Bauk
                 end
                 puts counts.inspect
               end
-              logger.debug { "TOTAL: #{@total}"}
+              logger.debug { "TOTAL: #{@total}" }
               @total_count += counts[index]
             end
             logger.warn "Star one answer: #{@total}"
