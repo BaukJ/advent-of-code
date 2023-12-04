@@ -27,6 +27,7 @@ module Bauk
             (0..@map.row_max_index).each do |row|
               (0..@map.column_max_index).each do |column|
                 score = calculate_scenic_score row, column
+                logger.info "#{row}/#{column} = #{score}"
                 most_scenic = score if score > most_scenic
               end
             end
@@ -39,7 +40,7 @@ module Bauk
             right = calculate_visible_trees(@map.line_of_cells([{ row:, column: }, { row:, column: @map.column_max_index }])[1..], height)
             up = calculate_visible_trees(@map.line_of_cells([{ row:, column: }, { row: 0, column: }])[1..], height)
             down = calculate_visible_trees(@map.line_of_cells([{ row:, column: }, { row: @map.row_max_index, column: }])[1..], height)
-            logger.info "LEFT: #{left}, right: #{right}, up: #{up}, down: #{down}"
+            logger.info "#{row}/#{column}: LEFT: #{left}, right: #{right}, up: #{up}, down: #{down}"
             down * up * left * right
           end
 
