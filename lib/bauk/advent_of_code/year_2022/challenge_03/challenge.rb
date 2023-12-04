@@ -19,7 +19,8 @@ module Bauk
             parse_lines
             logger.info @commons
             calculate_score
-            logger.warn "Total score: #{@score}"
+            logger.warn "Start one: #{@score}"
+            logger.warn "Start two: #{@score_two}"
           end
 
           def calculate_score
@@ -27,10 +28,13 @@ module Bauk
             @commons.each do |letter, count|
               @score += count * @scores[letter]
             end
+            @score_two = @badges.inject(0) { |total, badge| @scores[badge] + total }
           end
 
-          def parse_lines
-            @lines.each do |line|
+          def parse_lines # rubocop:disable Metrics/AbcSize
+            @badges = []
+            badge_options = []
+            @lines.each_with_index do |line, index|
               midpoint = line.length / 2
               list_a = line[0..midpoint - 1]
               list_b = line[midpoint..]
@@ -39,6 +43,13 @@ module Bauk
                 "#{line}(#{line.length}) -> #{list_a}(#{list_a.length}) / #{list_b}(#{list_b.length}) -> #{common_item}"
               end
               @commons[common_item] += 1
+              if index % 3 == 0 then badge_options = line.chars.uniq
+              else badge_options = badge_options & line.chars.uniq
+              end
+              if index % 3 == 2
+                die "Too many possible badges found #{badge_options.inspect}" unless badge_options.length == 1
+                @badges << badge_options[0]
+              end
             end
           end
 
