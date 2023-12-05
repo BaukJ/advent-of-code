@@ -43,9 +43,10 @@ module Bauk
                 "#{line}(#{line.length}) -> #{list_a}(#{list_a.length}) / #{list_b}(#{list_b.length}) -> #{common_item}"
               end
               @commons[common_item] += 1
-              if index % 3 == 0 then badge_options = line.chars.uniq
-              else badge_options = badge_options & line.chars.uniq
-              end
+              badge_options = if (index % 3).zero? then line.chars.uniq
+                              else
+                                badge_options & line.chars.uniq
+                              end
               if index % 3 == 2
                 die "Too many possible badges found #{badge_options.inspect}" unless badge_options.length == 1
                 @badges << badge_options[0]

@@ -43,7 +43,7 @@ module Bauk
           def move_line(line)
             die "Invalid move line: #{line}" unless line =~ /^move ([0-9]+) from ([0-9]+) to ([0-9]+)$/
             logger.debug "Pre move: #{@stacks.inspect}"
-            moving = @stacks[$2.to_i - 1].pop($1.to_i) #.reverse # Difference  between star one and two
+            moving = @stacks[$2.to_i - 1].pop($1.to_i) # .reverse # Difference  between star one and two
             @stacks[$3.to_i - 1] += moving
           end
 

@@ -62,7 +62,13 @@ module Bauk
           logger.error "Year/Challenge of #{year}/#{challenge} did not bring back a challenge class"
           raise e
         end
+        run_challenge challenge_class
+      end
+
+      def run_challenge(challenge_class)
         challenge_class.run
+      rescue Interrupt => e
+        logger.error "Interupted with Ctrl+C"
       end
 
       def parse_challenge_options(challenge_module, options, year, challenge)

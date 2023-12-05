@@ -47,10 +47,10 @@ RSpec.describe Bauk::AdventOfCode::BaseMap do # rubocop:disable Metrics/BlockLen
       expect { map.row(7) }.to raise_error Bauk::AdventOfCode::Error
     end
 
-    it 'load line of cells correctly' do
-      expect(map.line_of_cells([{row: 0, column: 0}, {row: 3, column: 0}]).flatten).to eq(%w[a A 1 q])
-      expect(map.line_of_cells([{row: 1, column: 1}, {row: 1, column: 4}]).flatten).to eq(%w[B C D E])
-      expect(map.line_of_cells([{row: 2, column: 4}, {row: 2, column: 1}]).flatten).to eq(%w[5 4 3 2])
+    it "load line of cells correctly" do
+      expect(map.line_of_cells([{ row: 0, column: 0 }, { row: 3, column: 0 }]).flatten).to eq(%w[a A 1 q])
+      expect(map.line_of_cells([{ row: 1, column: 1 }, { row: 1, column: 4 }]).flatten).to eq(%w[B C D E])
+      expect(map.line_of_cells([{ row: 2, column: 4 }, { row: 2, column: 1 }]).flatten).to eq(%w[5 4 3 2])
     end
   end
 end
