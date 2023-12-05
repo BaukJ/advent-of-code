@@ -18,12 +18,17 @@ module Bauk
         map = new lines.length, lines[0].length
         lines.each_with_index do |line, row|
           line.chars.each_with_index do |char, column|
-            next if char == "."
-
-            map.insert row, column, char
+            map.replace_cell row, column, cell_from_char(char)
           end
         end
         map
+      end
+
+      def self.cell_from_char(char)
+        case char
+        when "." then []
+        else [char]
+        end
       end
 
       def initialize(row_count, column_count)
@@ -77,6 +82,10 @@ module Bauk
 
       def reset_cell(row, column)
         @map[row][column] = generate_cell(row, column)
+      end
+
+      def replace_cell(row, column, cell)
+        @map[row][column] = cell
       end
 
       def row(index)
