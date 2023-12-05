@@ -67,7 +67,7 @@ module Bauk
 
       def run_challenge(challenge_class)
         challenge_class.run
-      rescue Interrupt => e
+      rescue Interrupt
         logger.error "Interupted with Ctrl+C"
       end
 

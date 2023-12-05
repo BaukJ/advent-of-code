@@ -14,9 +14,11 @@ module Bauk
             @maps = {}
             @found = {}
             @mappings = []
+            @smallest_range = @lines[3].split.last.to_i # Used to provide speed improvements and skip numbers
             @lines.each do |line|
               parse_line line
             end
+            logger.warn "Finished parsing. Smallest range: #{@smallest_range}"
           end
 
           def parse_line(line)
@@ -33,6 +35,7 @@ module Bauk
             when /^ *$/ then nil
             when /^([0-9 ]+) ([0-9 ]+) ([0-9 ]+)$/
               add_map_destinations line.split.map(&:to_i)
+              @smallest_range = $3.to_i if $3.to_i < @smallest_range
               @mappings[-1] << {source: $2.to_i, dest: $1.to_i, count: $3.to_i, source_end: $2.to_i + $3.to_i - 1, dest_end: $1.to_i + $3.to_i - 1, modifier: $1.to_i - $2.to_i}
             else
               die "Invalid line: #{line}"
@@ -101,6 +104,7 @@ module Bauk
 
           def find_smallest_location
             location = Opts.start_location
+            info_location = location + 100_000
             loop do
               location += 1
               seed = find_seed location
@@ -109,7 +113,10 @@ module Bauk
                 break
               end
               logger.debug { "#{location.underscore} => #{seed.underscore}" }
-              logger.info { "#{location.underscore} => #{seed.underscore}" } if (location % 100_000).zero?
+              if location >= info_location
+                logger.info { "#{location.underscore} => #{seed.underscore}" }
+                info_location += 100_000
+              end
             end
             location
           end
@@ -119,6 +126,22 @@ module Bauk
               mapping.each do |dest|
                 if location.between? dest[:dest], dest[:dest_end]
                   location -= dest[:modifier]
+                  break
+                end
+              end
+            end
+            location
+          end
+
+          # A improved speed version using multipl seeds, didn't need to get implemented as I got the answer the slow way
+          def find_seeds(locations)
+            @mappings.reverse.each do |mapping|
+              mapping.each do |dest|
+                if location[0].between? dest[:dest], dest[:dest_end]
+                  if location[-1].between? dest[:dest, dest[:dest_end]]
+                    locations.map! { |l| l - dest[:modifier] }
+                    # TODO
+                  end
                   break
                 end
               end
