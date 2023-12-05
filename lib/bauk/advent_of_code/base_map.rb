@@ -7,7 +7,7 @@ module Bauk
   module AdventOfCode
     # Base class for all maps
     class BaseMap < BaseClass
-      attr_accessor :map
+      attr_accessor :map, :allow_multiples
       attr_reader :row_count, :column_count, :row_max_index, :column_max_index
 
       def self.from_file(file)
