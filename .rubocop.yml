@@ -21,13 +21,16 @@ Metrics/MethodLength:
   Max: 50 # For now, as these challenges have some dirty quick hacks (e.g. large hash data in code)
 
 Metrics/CyclomaticComplexity:
-  Max: 10
+  Max: 20
 
 Metrics/PerceivedComplexity:
-  Max: 10
+  Max: 20
 
 Metrics/ClassLength:
   Max: 200
+
+Metrics/AbcSize:
+  Max: 20
 
 Style/PerlBackrefs:
   Enabled: false # Allows usage of $1 and $2 for regex groups
