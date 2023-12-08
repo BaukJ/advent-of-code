@@ -31,6 +31,14 @@ module Bauk
         end
       end
 
+      def normalise_indexes(row_index, column_index)
+        raise Error, "Row index too high (#{row_index}/#{@row_max_index})" if row_index > @row_max_index
+        raise Error, "Column index too high (#{column_index}/#{@column_max_index})" if column_index > @column_max_index
+        raise Error, "Row index too low (#{row_index}/-#{@row_max_index})" if row_index < @row_max_index
+        raise Error, "Column index too low (#{column_index}/-#{@column_max_index})" if column_index < -@column_max_index
+        [row_index, column_index]
+      end
+
       def initialize(row_count, column_count)
         super()
         @row_count = row_count
