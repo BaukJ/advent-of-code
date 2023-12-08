@@ -20,7 +20,9 @@ module Bauk
       end
 
       def self.cache(id, symbolize_names: true)
-        file = "#{File.join(__dir__, "..", "..", "..", id)}.json"
+        file = File.expand_path("../../../cache/#{id}.json", __dir__)
+        dir = File.expand_path("..", file)
+        FileUtils.mkdir_p dir
         if File.exist? file
           data = JSON.load_file file, symbolize_names:
         else

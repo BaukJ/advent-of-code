@@ -126,13 +126,10 @@ module Bauk
           end
 
           def star_two # rubocop:disable Metrics/AbcSize
-            cache_file = "cache-#{Opts.file}.json"
-            if File.exist? cache_file
-              @node_details = JSON.load_file cache_file, symbolize_names: true
-            else
+            @node_details = Utils.cache(Opts.file) do
               @index = 0
               parse_nodes
-              File.write cache_file, JSON.dump(@node_details)
+              @node_details
             end
             # compact_node_details
             @index = Opts.start % @steps.length
