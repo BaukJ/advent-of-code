@@ -53,7 +53,7 @@ module Bauk
 
           def move(steps)
             (1..steps).each do |i|
-              logger.debug { "Moving #{@facings[@facing_index]} from #{@row}/#{@column} (step #{i}/#{steps})"}
+              logger.debug { "Moving #{@facings[@facing_index]} from #{@row}/#{@column} (step #{i}/#{steps})" }
               set_succesful_cell if @map.empty? @row, @column
               case @facings[@facing_index]
               when "U" then move_up
@@ -87,7 +87,7 @@ module Bauk
           end
 
           def calculate_new_square
-            logger.debug { "Calculating new sqaure from #{@row}/#{@column}"}
+            logger.debug { "Calculating new sqaure from #{@row}/#{@column}" }
             if @box_shape
               move_around_square
             else
@@ -103,43 +103,42 @@ module Bauk
           def move_around_square
             @mappings = {
               "3_0" => {
-                source: {direction: "U", row: 3, column: 0},
-                destination: {direction: "D", row: 0, column: 11},
+                source: { direction: "U", row: 3, column: 0 },
+                destination: { direction: "D", row: 0, column: 11 }
               }
             }
-            if Opts.file == "data.txt"
+            return if Opts.file == "data.txt"
+
+            if @mappings["#{@row}_#{@column}"]
+              mapping = @mappings["#{@row}_#{@column}"]
+              die "Invalid direction (#{@facings[@facing_index]})" unless @facings[@facing_index] == mapping[:source][:direction]
+              @facing_index = @facings.find_index mapping[:destination][:direction]
+              @row = mapping[:destination][:row]
+              @column = mapping[:destination][:column]
+            elsif @row == -1
+              @row = 4
+              @column = 3 - (@column - 8)
+              @facing_index = 1
+            elsif @column == 12 && @row.between?(0, 3)
+              @column = 15
+              @row = 11 - @row
+              @facing_index = 1
+            elsif @column == 12 && @row.between?(4, 7)
+              @column = 12 + 7 - @row
+              @row = 8
+              @facing_index = 2
+            elsif @column == 16 && @row.between?(8, 11)
+              @column = 11
+              @row = 11 - @row
+              @facing_index = 2
+            elsif @row == 12 && @column.between?(12, 15)
+              @row = 4 + 15 - @column
+              @column = 0
+              @facing_index = 2
             else
-              if @mappings["#{@row}_#{@column}"]
-                mapping = @mappings["#{@row}_#{@column}"]
-                die "Invalid direction (#{@facings[@facing_index]})" unless @facings[@facing_index] == mapping[:source][:direction]
-                @facing_index = @facings.find_index mapping[:destination][:direction]
-                @row = mapping[:destination][:row]
-                @column = mapping[:destination][:column]
-              elsif @row == -1
-                @row = 4
-                @column = 3 - (@column - 8)
-                @facing_index = 1
-              elsif @column == 12 && @row.between?(0, 3)
-                @column = 15
-                @row = 11 - @row
-                @facing_index = 1
-              elsif @column == 12 && @row.between?(4, 7)
-                @column = 12 + 7 - @row
-                @row = 8
-                @facing_index = 2
-              elsif @column == 16 && @row.between?(8, 11)
-                @column = 11
-                @row = 11 - @row
-                @facing_index = 2
-              elsif @row == 12 && @column.between?(12, 15)
-                @row = 4 + 15 - @column
-                @column = 0
-                @facing_index = 2
-              else
-                die "Invalid position #{@row}/#{@column}"
-              end
-              check_move
+              die "Invalid position #{@row}/#{@column}"
             end
+            check_move
           end
 
           def move_right
@@ -153,7 +152,8 @@ module Bauk
               calculate_new_square
             elsif @map.cell(@row, @column).include?("#") then revert_to_succesful_move
             elsif @map.empty?(@row, @column) then set_succesful_cell
-            else die "Invalid state"
+            else
+              die "Invalid state"
             end
           end
 

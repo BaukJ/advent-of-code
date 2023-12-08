@@ -3,7 +3,7 @@
 class Map < Bauk::AdventOfCode::BaseMap; end
 
 RSpec.describe Bauk::AdventOfCode::BaseMap do # rubocop:disable Metrics/BlockLength
-  context "map1" do
+  context "empty map" do
     let(:map) { Map.new 5, 7 }
 
     it "Starts with empty cells" do
@@ -20,7 +20,7 @@ RSpec.describe Bauk::AdventOfCode::BaseMap do # rubocop:disable Metrics/BlockLen
     end
   end
 
-  context "map2" do
+  context "simple map" do # rubocop:disable Metrics/BlockLength
     let(:map) { Map.from_lines %w[abcdefg ABCDEFG 1234567 qwertyu asdfghj zxcvbnm] }
 
     it "loads the map correctly" do
@@ -51,6 +51,11 @@ RSpec.describe Bauk::AdventOfCode::BaseMap do # rubocop:disable Metrics/BlockLen
       expect(map.line_of_cells([{ row: 0, column: 0 }, { row: 3, column: 0 }]).flatten).to eq(%w[a A 1 q])
       expect(map.line_of_cells([{ row: 1, column: 1 }, { row: 1, column: 4 }]).flatten).to eq(%w[B C D E])
       expect(map.line_of_cells([{ row: 2, column: 4 }, { row: 2, column: 1 }]).flatten).to eq(%w[5 4 3 2])
+      expect(map.line_of_cells([{ row: 4, column: 4 }, { row: 2, column: 4 }]).flatten).to eq(%w[g t 5])
+    end
+
+    it "fails loading lines if outside boundary" do
+      expect { map.line_of_cells([{ row: 4, column: 4 }, { row: 7, column: 4 }]) }.to raise_error Bauk::AdventOfCode::Error
     end
   end
 end

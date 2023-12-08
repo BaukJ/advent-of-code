@@ -41,7 +41,7 @@ module Bauk
             @races.each do |race|
               race[:wins] = get_possible_wins race
             end
-            logger.warn "Star one answer: #{@races.inject(1) { |o, r| o * r[:wins]}}"
+            logger.warn "Star one answer: #{@races.inject(1) { |o, r| o * r[:wins] }}"
           end
 
           def star_two

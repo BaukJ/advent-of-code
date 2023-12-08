@@ -1,3 +1,5 @@
+# Especially permissive at the moment, as I just need to get the challenges completed asap
+
 AllCops:
   TargetRubyVersion: 3.2
   NewCops: enable

@@ -14,7 +14,7 @@ module Bauk
           end
 
           def reset(knots)
-            @knots = (0..knots).map { {row: 0, column: 0 }}
+            @knots = (0..knots).map { { row: 0, column: 0 } }
             @tail_visits = {}
             update_tail_visits
             @max_row = 0
@@ -44,12 +44,12 @@ module Bauk
           end
 
           def update_tail_visits
-            @tail_visits["#{@knots[-1][:row]}_#{@knots[-1][:column]}"] = {row: @knots[-1][:row], column: @knots[-1][:column]}
+            @tail_visits["#{@knots[-1][:row]}_#{@knots[-1][:column]}"] = { row: @knots[-1][:row], column: @knots[-1][:column] }
           end
 
           def update_knots
             (1...@knots.length).each do |i|
-              update_knot @knots[i], @knots[i-1]
+              update_knot @knots[i], @knots[i - 1]
             end
             update_tail_visits
           end

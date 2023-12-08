@@ -36,7 +36,8 @@ module Bauk
             when /^([0-9 ]+) ([0-9 ]+) ([0-9 ]+)$/
               add_map_destinations line.split.map(&:to_i)
               @smallest_range = $3.to_i if $3.to_i < @smallest_range
-              @mappings[-1] << {source: $2.to_i, dest: $1.to_i, count: $3.to_i, source_end: $2.to_i + $3.to_i - 1, dest_end: $1.to_i + $3.to_i - 1, modifier: $1.to_i - $2.to_i}
+              @mappings[-1] << { source: $2.to_i, dest: $1.to_i, count: $3.to_i, source_end: $2.to_i + $3.to_i - 1, dest_end: $1.to_i + $3.to_i - 1,
+                                 modifier: $1.to_i - $2.to_i }
             else
               die "Invalid line: #{line}"
             end
@@ -137,13 +138,13 @@ module Bauk
           def find_seeds(locations)
             @mappings.reverse.each do |mapping|
               mapping.each do |dest|
-                if location[0].between? dest[:dest], dest[:dest_end]
-                  if location[-1].between? dest[:dest, dest[:dest_end]]
-                    locations.map! { |l| l - dest[:modifier] }
-                    # TODO
-                  end
-                  break
+                next unless location[0].between? dest[:dest], dest[:dest_end]
+
+                if location[-1].between? dest[:dest, dest[:dest_end]]
+                  locations.map! { |l| l - dest[:modifier] }
+                  # TODO
                 end
+                break
               end
             end
             location
@@ -157,7 +158,7 @@ module Bauk
           end
 
           def star_two
-            @min_location = 999999999999999
+            @min_location = 999_999_999_999_999
             @all_seeds = []
             seeds_done = 0
             @seeds.each_slice(2) do |start, count|
@@ -179,12 +180,5 @@ module Bauk
         end
       end
     end
-  end
-end
-
-# Monkey-patch integer to be able to pretty print with underscores
-class Integer
-  def underscore
-    to_s.gsub(/(\d)(?=(\d\d\d)+(?!\d))/, "\\1_")
   end
 end

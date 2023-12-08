@@ -18,12 +18,12 @@ module Bauk
           end
 
           def sort_hands(x, y)
-            if x[:type] != y[:type] then x[:type] <=> y[:type]
-            else
-              (0..4).each do
-                return x[:card_values] <=> y[:card_values] if x[:card_values] != y[:card_values]
-              end
+            if x[:type] == y[:type]
+              return x[:card_values] <=> y[:card_values] if x[:card_values] != y[:card_values]
+
               die "Could not seperate hands: #{x.inspect} #{y.inspect}"
+            else
+              x[:type] <=> y[:type]
             end
           end
 
@@ -50,7 +50,10 @@ module Bauk
                 bid: bid.to_i,
                 cards:,
                 card_values: card_values(cards),
-                map: cards.inject({}) { |m, c| m[c] ||= 0; m[c] += 1; m }
+                map: cards.each_with_object({}) do |c, m| 
+                       m[c] ||= 0
+                                                         m[c] += 1
+                     end
               }
               @hands.each { |h| h[:type] = calculate_type(h) }
             end

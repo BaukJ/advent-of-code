@@ -22,13 +22,13 @@ module Bauk
           def star_one
             floor = 0
             @line.chars.each do |char|
-              logger.debug { "Start: #{floor}"}
+              logger.debug { "Start: #{floor}" }
               case char
               when ")" then floor -= 1
               when "(" then floor += 1
               else die "Invalid char: #{char}"
               end
-              logger.debug { "End: #{floor} (after '#{char}')"}
+              logger.debug { "End: #{floor} (after '#{char}')" }
               sleep 0.5 if logger.debug?
             end
             logger.warn "Star one answer: #{floor}"

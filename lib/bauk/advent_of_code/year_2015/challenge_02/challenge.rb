@@ -43,7 +43,7 @@ module Bauk
             @boxes.each do |box|
               sides = [box[:h], box[:w], box[:l]].sort
               @total += (sides[0] * 2) + (sides[1] * 2)
-              @total += sides.inject(1) { |o,s| o * s }
+              @total += sides.inject(1) { |o, s| o * s }
             end
             logger.warn "Star two answer: #{@total}"
           end

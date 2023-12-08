@@ -18,14 +18,16 @@ module Bauk
             @moves = {}
             @lines.each do |line|
               die "T: #{line}" unless line =~ /^([A-Z0-9]{3}) *= *\(([A-Z0-9]{3}), ([A-Z0-9]{3})\)$/
-              @moves[$1] = {"L" => $2, "R" => $3}
+              @moves[$1] = { "L" => $2, "R" => $3 }
             end
             @index = 0
             @nodes = @moves.keys.select do |node|
               node[-1] == "A"
             end
-            @node_details = @nodes.map { |n| { start: n, positions: [n] } }
+            # @node_details = @nodes.map { |n| { start: n, positions: [n] } }
+            @node_details = @nodes.map { |n| { start: n, positions: [] } }
             logger.warn "Steps size: #{@steps.length}, Nodes size: #{@nodes.length}"
+            @total_index = 0
           end
 
           def run
@@ -37,13 +39,12 @@ module Bauk
           def do_step
             @position = step @position
             @index += 1
-            if @index >= @steps.length
-              @index = 0
-              logger.debug { "Progress: #{@nodes.select { |n| n[-1] == "Z" }.length}" }
-            end
+            return unless @index >= @steps.length
+
+            @index = 0
           end
 
-          def parse_nodes
+          def parse_nodes # rubocop:disable Metrics/AbcSize
             logger.warn "Parsing nodes..."
             complete = 0
             loop do
@@ -54,11 +55,18 @@ module Bauk
                 else
                   updated = true
                   new_node = step node
-                  if @node_details[index][:positions].include?(new_node) && @node_details[index][:positions].map.with_index { |n, i| [n, i] }.select { |n, i| n == new_node }.any? { |n,i| i == @index }
+                  if @node_details[index][:positions].include?(new_node) && @node_details[index][:positions].map.with_index do |n, i|
+                                                                              [n, i]
+                                                                            end.select { |n, _i| n == new_node }.any? { |_n, i| i == @index }
                     complete += 1
-                    logger.info { "Completed: #{complete}/#{@nodes.length}"}
-                    @node_details[index][:loop_size] = @node_details[index][:positions].length
+                    logger.info { "Completed: #{complete}/#{@nodes.length}" }
                     @node_details[index][:ends] = @node_details[index][:positions].map { |p| p[-1] == "Z" }
+                    loop_start = @node_details[index][:positions].map.with_index { |n, i| [n, i] }.select { |n, i| n == new_node && i == @index }[0]
+                    @node_details[index][:loop_start] = loop_start[0]
+                    @node_details[index][:loop_start_index] = loop_start[1]
+                    # @node_details[index][:start_index] = @index
+                    @node_details[index][:loop_size] = @node_details[index][:positions].length - @node_details[index][:loop_start_index]
+                    @node_details[index][:positions_size] = @node_details[index][:positions].length
                   else
                     @node_details[index][:positions] << new_node
                   end
@@ -68,9 +76,6 @@ module Bauk
               update_index
               break unless updated
             end
-            puts @node_details.inspect
-            puts
-            puts @node_details[0].inspect
             logger.warn "Parsing nodes...DONE"
           end
 
@@ -79,9 +84,10 @@ module Bauk
             update_index
           end
 
-          def update_index
-            @index += 1
-            @index = 0 if @index >= @steps.length
+          def update_index(add = 1)
+            @index += add
+            @total_index += add
+            @index %= @steps.length
           end
 
           def step(position)
@@ -90,21 +96,23 @@ module Bauk
           end
 
           def node_end?(node)
-            index = @index
-            if index >= node[:loop_size]
-              puts step()
+            index = @total_index
+            if index >= node[:positions_size]
+              index -= node[:loop_start_index]
+              index %= node[:loop_size]
+              index += node[:loop_start_index]
             end
             node[:ends][index]
-            # if @index 
-            #   if node[:ends][@index]
           end
 
           def node_position(node)
-            index = @index + 1
-            if index >= node[:loop_size]
-              exit
+            index = @total_index
+            if index >= node[:positions_size]
+              index -= node[:loop_start_index]
+              index %= node[:loop_size]
+              index += node[:loop_start_index]
             end
-            puts node[:start]
+            @logger.warn "Went from #{@total_index} to #{index}"
             node[:positions][index]
           end
 
@@ -117,27 +125,35 @@ module Bauk
             logger.warn "Star one answer: #{@count}"
           end
 
-          def star_two
-            @count = 0
-            @index = 0
-            if File.exist? "cache.json"
-              @node_details = JSON.load_file "cache.json", {:symbolize_names => true}
+          def star_two # rubocop:disable Metrics/AbcSize
+            cache_file = "cache-#{Opts.file}.json"
+            if File.exist? cache_file
+              @node_details = JSON.load_file cache_file, symbolize_names: true
             else
+              @index = 0
               parse_nodes
-              File.write "cache.json", JSON.dump(@node_details)
+              File.write cache_file, JSON.dump(@node_details)
             end
-            # exit
-            @count = 0
-            @index = 0
-            until @nodes.all? { |n| n[-1] == "Z" }
-              p = node_position(@node_details[0])
-              do_nodes
-              puts "#{@nodes[0]} == #{p}"
-              die "" if @nodes[0] != p
-              # sleep 1
-              @count += 1
+            # compact_node_details
+            @index = Opts.start % @steps.length
+            @total_index = Opts.start
+            count_debug = Opts.start
+            found_node_one = false
+            until @node_details.all? { |node| node_end? node }
+              if @total_index > count_debug
+                logger.debug { "#{@total_index}..." }
+                count_debug += 100_000_000_000
+              end
+              if node_end?(@node_details[0])
+                to_add = @node_details[0][:loop_size]
+                found_node_one = true
+              else
+                die "Technical error" if found_node_one
+                to_add = 1
+              end
+              update_index to_add
             end
-            logger.warn "Star two answer: #{@count}"
+            logger.warn "Star two answer: #{@total_index + 1}" # As index 0 is count 1
           end
         end
       end
