@@ -50,9 +50,9 @@ module Bauk
                 bid: bid.to_i,
                 cards:,
                 card_values: card_values(cards),
-                map: cards.each_with_object({}) do |c, m| 
+                map: cards.each_with_object({}) do |c, m|
                        m[c] ||= 0
-                                                         m[c] += 1
+                       m[c] += 1
                      end
               }
               @hands.each { |h| h[:type] = calculate_type(h) }
