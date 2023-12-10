@@ -6,7 +6,7 @@ require_relative "utils"
 module Bauk
   module AdventOfCode
     # Base class for all maps
-    class BaseMap < BaseClass
+    class BaseMap < BaseClass # rubocop:disable Metrics/ClassLength
       attr_accessor :map, :allow_multiples
       attr_reader :row_count, :column_count, :row_max_index, :column_max_index
 
@@ -18,13 +18,13 @@ module Bauk
         map = new lines.length, lines[0].length
         lines.each_with_index do |line, row|
           line.chars.each_with_index do |char, column|
-            map.replace_cell row, column, cell_from_char(char)
+            map.replace_cell row, column, cell_from_char(char, row, column)
           end
         end
         map
       end
 
-      def self.cell_from_char(char)
+      def self.cell_from_char(char, _row, _column)
         case char
         when "." then []
         else [char]
@@ -68,16 +68,20 @@ module Bauk
 
       def to_s
         @map.map.with_index do |row, row_index|
-          row.map.with_index do |column, column_index|
-            if empty?(row_index, column_index) then "."
-            elsif [["o"], "o"].include?(column) then "\e[48;5;10mo\e[0m"
-            elsif !column.is_a? Array then column
-            elsif column.length > 1 then column.length
-            else
-              column[0]
-            end
+          row.map.with_index do |cell, column_index|
+            cell_to_s(cell, row_index, column_index)
           end.join
         end.join("\n")
+      end
+      
+      def cell_to_s(cell, row_index, column_index)
+        if empty?(row_index, column_index) then "."
+        elsif [["o"], "o"].include?(cell) then "\e[48;5;10mo\e[0m"
+        elsif !cell.is_a? Array then cell
+        elsif cell.length > 1 then cell.length
+        else
+          cell[0]
+        end
       end
 
       def insert(row, column, item, allow_multiples: @allow_multiples)
