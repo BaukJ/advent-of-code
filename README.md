@@ -17,6 +17,9 @@ bundle install
 # Running
 # Format: bundle exec advent-of-code <year> <month>
 bundle exec advent-of-code 2022 03
+
+# Some will need this set:
+export RUBY_THREAD_VM_STACK_SIZE=5000000
 ```
 
 ## Contributing

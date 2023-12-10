@@ -73,7 +73,7 @@ module Bauk
           end.join
         end.join("\n")
       end
-      
+
       def cell_to_s(cell, row_index, column_index)
         if empty?(row_index, column_index) then "."
         elsif [["o"], "o"].include?(cell) then "\e[48;5;10mo\e[0m"
