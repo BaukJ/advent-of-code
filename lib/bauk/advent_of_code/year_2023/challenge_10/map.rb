@@ -15,7 +15,7 @@ module Bauk
             "J" => %i[up left],
             "7" => %i[down left],
             "F" => %i[down right],
-            "S" => %i[up down left right],
+            "S" => %i[up down left right]
           }.freeze
 
           def self.cell_from_char(char, row, column)
@@ -25,10 +25,14 @@ module Bauk
             cell = { char:, connections: [], row:, column:, source_cells: {} }
             Pipes[char].each do |direction|
               case direction
-              when :up then cell[:connections] << {direction:, cell: {row: row - 1, column: }, left_side: {row:, column: column - 1 }, right_side: {row:, column: column + 1}}
-              when :down then cell[:connections] << {direction:, cell: {row: row + 1, column: }, left_side: {row:, column: column + 1}, right_side: {row:, column: column - 1 }}
-              when :left then cell[:connections] << {direction:, cell: {row:, column: column - 1 }, left_side: {row: row + 1, column: }, right_side: {row: row - 1, column: }}
-              when :right then cell[:connections] << {direction:, cell: {row:, column: column + 1}, left_side: {row: row - 1, column: }, right_side: {row: row + 1, column: }}
+              when :up then cell[:connections] << { direction:, cell: { row: row - 1, column: }, left_side: { row:, column: column - 1 },
+                                                    right_side: { row:, column: column + 1 } }
+              when :down then cell[:connections] << { direction:, cell: { row: row + 1, column: }, left_side: { row:, column: column + 1 },
+                                                      right_side: { row:, column: column - 1 } }
+              when :left then cell[:connections] << { direction:, cell: { row:, column: column - 1 }, left_side: { row: row + 1, column: },
+                                                      right_side: { row: row - 1, column: } }
+              when :right then cell[:connections] << { direction:, cell: { row:, column: column + 1 }, left_side: { row: row - 1, column: },
+                                                       right_side: { row: row + 1, column: } }
               else die "Invalid cell: #{char}"
               end
             end
@@ -37,52 +41,52 @@ module Bauk
             end
 
             case char
-            when "|" then 
-              cell[:source_cells]["#{row-1}_#{column}"] = [
-                [{row:, column: column + 1 }], #Left
-                [{row:, column: column - 1 }],#Right
+            when "|"
+              cell[:source_cells]["#{row - 1}_#{column}"] = [
+                [{ row:, column: column + 1 }], # Left
+                [{ row:, column: column - 1 }] # Right
               ]
-              cell[:source_cells]["#{row+1}_#{column}"] = cell[:source_cells]["#{row-1}_#{column}"].reverse
-            when "-" then
-              cell[:source_cells]["#{row}_#{column-1}"] = [
-                [{row: row - 1, column: column }],
-                [{row: row + 1, column: column }],
+              cell[:source_cells]["#{row + 1}_#{column}"] = cell[:source_cells]["#{row - 1}_#{column}"].reverse
+            when "-"
+              cell[:source_cells]["#{row}_#{column - 1}"] = [
+                [{ row: row - 1, column: }],
+                [{ row: row + 1, column: }]
               ]
-              cell[:source_cells]["#{row}_#{column+1}"] = cell[:source_cells]["#{row}_#{column-1}"].reverse
-            when "L" then 
-              cell[:source_cells]["#{row-1}_#{column}"] = [
+              cell[:source_cells]["#{row}_#{column + 1}"] = cell[:source_cells]["#{row}_#{column - 1}"].reverse
+            when "L"
+              cell[:source_cells]["#{row - 1}_#{column}"] = [
                 [],
-                [{row: row + 1, column: column }, {row: row, column: column - 1}],
+                [{ row: row + 1, column: }, { row:, column: column - 1 }]
               ]
-              cell[:source_cells]["#{row}_#{column+1}"] = cell[:source_cells]["#{row-1}_#{column}"].reverse
-            when "J" then
-              cell[:source_cells]["#{row-1}_#{column}"] = [
-                [{row: row + 1, column: column }, {row: row, column: column + 1}],
+              cell[:source_cells]["#{row}_#{column + 1}"] = cell[:source_cells]["#{row - 1}_#{column}"].reverse
+            when "J"
+              cell[:source_cells]["#{row - 1}_#{column}"] = [
+                [{ row: row + 1, column: }, { row:, column: column + 1 }],
+                []
+              ]
+              cell[:source_cells]["#{row}_#{column - 1}"] = cell[:source_cells]["#{row - 1}_#{column}"].reverse
+            when "7"
+              cell[:source_cells]["#{row + 1}_#{column}"] = [
                 [],
+                [{ row: row - 1, column: }, { row:, column: column + 1 }]
               ]
-              cell[:source_cells]["#{row}_#{column-1}"] = cell[:source_cells]["#{row-1}_#{column}"].reverse
-            when "7" then
-              cell[:source_cells]["#{row+1}_#{column}"] = [
-                [],
-                [{row: row - 1, column: column }, {row: row, column: column + 1}],
+              cell[:source_cells]["#{row}_#{column - 1}"] = cell[:source_cells]["#{row + 1}_#{column}"].reverse
+            when "F"
+              cell[:source_cells]["#{row + 1}_#{column}"] = [
+                [{ row: row - 1, column: }, { row:, column: column - 1 }],
+                []
               ]
-              cell[:source_cells]["#{row}_#{column-1}"] = cell[:source_cells]["#{row+1}_#{column}"].reverse
-            when "F" then 
-              cell[:source_cells]["#{row+1}_#{column}"] = [
-                [{row: row - 1, column: column }, {row: row, column: column - 1}],
-                [],
-              ]
-              cell[:source_cells]["#{row}_#{column+1}"] = cell[:source_cells]["#{row+1}_#{column}"].reverse
-            when "S" then 
-              cell[:source_cells]["#{row+1}_#{column}"] = [[],[]]
-              cell[:source_cells]["#{row-1}_#{column}"] = [[],[]]
-              cell[:source_cells]["#{row}_#{column+1}"] = [[],[]]
-              cell[:source_cells]["#{row}_#{column-1}"] = [[],[]]
+              cell[:source_cells]["#{row}_#{column + 1}"] = cell[:source_cells]["#{row + 1}_#{column}"].reverse
+            when "S"
+              cell[:source_cells]["#{row + 1}_#{column}"] = [[], []]
+              cell[:source_cells]["#{row - 1}_#{column}"] = [[], []]
+              cell[:source_cells]["#{row}_#{column + 1}"] = [[], []]
+              cell[:source_cells]["#{row}_#{column - 1}"] = [[], []]
             end
             cell
           end
 
-          def cell_to_s(cell, row_index, column_index)
+          def cell_to_s(cell, _row_index, _column_index)
             if cell.empty? then "."
             else
               cell[:char]

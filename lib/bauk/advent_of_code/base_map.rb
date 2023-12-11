@@ -151,6 +151,13 @@ module Bauk
         line
       end
 
+      # line line_of_cells, but omits your starting point
+      def path_to_cells(points)
+        cells = line_of_cells(points)
+        cells.shift
+        cells
+      end
+
       def cell(row, column)
         @map[row][column]
       end

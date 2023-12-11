@@ -17,7 +17,7 @@ module Bauk
             @map = Map.from_lines @lines
             puts @map
             @loop = {}
-            @map.cells_with_row_column.each do |cell, row, column|
+            @map.cells_with_row_column.each do |cell, _row, _column|
               next unless cell != [] && cell[:char] == "S"
 
               die "Too many S's!" unless @loop.empty?
@@ -47,7 +47,7 @@ module Bauk
                   connected_cell = @map.cell connection[:cell][:row], connection[:cell][:column]
                   next if connected_cell.empty?
 
-                  new_ends << connected_cell if connected_cell[:connections].map { |c| c[:cell] }.include?({row: e[:row], column: e[:column]})
+                  new_ends << connected_cell if connected_cell[:connections].map { |c| c[:cell] }.include?({ row: e[:row], column: e[:column] })
                 end
               end
               @ends = new_ends
@@ -62,20 +62,16 @@ module Bauk
           def cell_to_key(cell)
             "#{cell[:row]}_#{cell[:column]}"
           end
-          
+
           def calculate_sides(previous_cell, cell)
             # puts "ALCULATE_SIDES: #{cell.inspect}"
-            direction = previous_cell[:connections].select { |d| d[:cell][:row] == cell[:row] && d[:cell][:column] == cell[:column] }.first
+            previous_cell[:connections].select { |d| d[:cell][:row] == cell[:row] && d[:cell][:column] == cell[:column] }.first
             source_cells = cell[:source_cells][cell_to_key(previous_cell)]
             source_cells[0].each do |left|
-              unless @left_cells[cell_to_key(left)]
-                add_padding left, @left_cells
-              end
+              add_padding left, @left_cells unless @left_cells[cell_to_key(left)]
             end
             source_cells[1].each do |right|
-              unless @right_cells[cell_to_key(right)]
-                add_padding right, @right_cells
-              end
+              add_padding right, @right_cells unless @right_cells[cell_to_key(right)]
             end
           end
 
@@ -83,22 +79,24 @@ module Bauk
             # puts "ADD PADDING: #{cell.inspect}"
             key = cell_to_key(cell)
             return if @checked_cells[key]
+
             # puts @checked_cells.length.inspect
             # puts @map.cells.length
             @checked_cells[key] = true
 
             return if cell_list[key] || @loop[key]
-            if cell[:row] < 0 || cell[:column] < 0 || cell[:row] >= @map.row_max_index || cell[:column] >= @map.column_max_index
+
+            if (cell[:row]).negative? || (cell[:column]).negative? || cell[:row] >= @map.row_max_index || cell[:column] >= @map.column_max_index
               cell_list["X"] = true
               return
             end
             cell_list[key] = cell
 
-            @map.adjacent_4_cells_with_row_column(cell[:row], cell[:column]).each do |c, row, column|
+            @map.adjacent_4_cells_with_row_column(cell[:row], cell[:column]).each do |_c, row, column|
               # puts "Adding more padding: #{row}/#{column}"
               # puts c.inspect
               # add_padding({row:, column:}, cell_list) if c.empty?
-              add_padding({row:, column:}, cell_list) unless @checked_cells[cell_to_key({row:, column:})]
+              add_padding({ row:, column: }, cell_list) unless @checked_cells[cell_to_key({ row:, column: })]
             end
           end
 
@@ -108,7 +106,7 @@ module Bauk
             @checked_cells = {}
             @previous_end = @start_cell
             @end = @start_cell[:connections].map { |c| @loop["#{c[:cell][:row]}_#{c[:cell][:column]}"] }.select do |e|
-              e && e[:connections].map { |c| c[:cell] }.include?({row: @start_cell[:row], column: @start_cell[:column]})
+              e && e[:connections].map { |c| c[:cell] }.include?({ row: @start_cell[:row], column: @start_cell[:column] })
             end.first # Go one way round
             while @end != @start_cell
               calculate_sides(@previous_end, @end)
@@ -123,7 +121,6 @@ module Bauk
             end
             # calculate_sides @start_cell
 
-
             if @left_cells["X"] && @right_cells["X"]
               die "No looped cells found! :("
             elsif @left_cells["X"]
@@ -135,7 +132,7 @@ module Bauk
               die "2 looped cells found..."
             end
             looped_cells.each_value do |cell|
-              @map.replace_cell cell[:row], cell[:column], {char: "*"}
+              @map.replace_cell cell[:row], cell[:column], { char: "*" }
             end
             puts @map
             logger.warn "Star two answer: #{looped_cells.length}"
