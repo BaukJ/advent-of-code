@@ -31,7 +31,7 @@ module Bauk
           end
 
           def find_symmetry_index(lines, smudge = false)
-            indexes = (0..(lines[0].length-2)).to_a
+            indexes = (0..(lines[0].length - 2)).to_a
             # puts max_right
             indexes.select! do |index|
               valid_index? lines, index, smudge
@@ -51,9 +51,10 @@ module Bauk
                 if line[left] != line[right]
                   return false unless smudge
 
-                  lines2 = lines.map { |l| l.clone }
+                  lines2 = lines.map(&:clone)
                   lines2[line_index][left] = !lines2[line_index][left]
                   return true if valid_index?(lines2, index, false)
+
                   lines2[line_index][left] = !lines2[line_index][left]
                   lines2[line_index][right] = !lines2[line_index][right]
                   return true if valid_index?(lines2, index, false)
@@ -63,7 +64,7 @@ module Bauk
                 right += 1
               end
             end
-            ! smudge # If we need to smudge, this can't count
+            !smudge # If we need to smudge, this can't count
           end
 
           def star_one
@@ -71,11 +72,11 @@ module Bauk
             @maps.each do |map|
               # puts map
               index = find_symmetry_index(map.rows)
-              if index.empty?
-                @total += 100 * (find_symmetry_index(map.columns)[0] + 1)
-              else
-                @total += (index[0] + 1)
-              end
+              @total += if index.empty?
+                          100 * (find_symmetry_index(map.columns)[0] + 1)
+                        else
+                          (index[0] + 1)
+                        end
             end
             logger.warn "Star one answer: #{@total}"
           end
@@ -84,11 +85,11 @@ module Bauk
             @total = 0
             @maps.each do |map|
               index = find_symmetry_index(map.rows, true)
-              if index.empty?
-                @total += 100 * (find_symmetry_index(map.columns, true)[0] + 1)
-              else
-                @total += (index[0] + 1)
-              end
+              @total += if index.empty?
+                          100 * (find_symmetry_index(map.columns, true)[0] + 1)
+                        else
+                          (index[0] + 1)
+                        end
             end
             logger.warn "Star two answer: #{@total}"
           end

@@ -1,4 +1,7 @@
 # Especially permissive at the moment, as I just need to get the challenges completed asap
+require:
+  - rubocop-rake
+  - rubocop-rspec
 
 AllCops:
   TargetRubyVersion: 3.2

@@ -2,7 +2,7 @@
 
 class Map < Bauk::AdventOfCode::BaseMap; end
 
-RSpec.describe Bauk::AdventOfCode::BaseMap do # rubocop:disable Metrics/BlockLength
+RSpec.describe Bauk::AdventOfCode::BaseMap do
   context "empty map" do
     let(:map) { Map.new 5, 7 }
 
@@ -20,7 +20,7 @@ RSpec.describe Bauk::AdventOfCode::BaseMap do # rubocop:disable Metrics/BlockLen
     end
   end
 
-  context "simple map" do # rubocop:disable Metrics/BlockLength
+  context "simple map" do
     let(:map) { Map.from_lines %w[abcdefg ABCDEFG 1234567 qwertyu asdfghj zxcvbnm] }
 
     it "loads the map correctly" do
