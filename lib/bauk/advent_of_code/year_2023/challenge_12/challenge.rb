@@ -66,7 +66,7 @@ module Bauk
                       comb_items = combination.split("_")
                       good = true
                       comb_items.each_with_index do |item, index|
-                        if item.to_i == arrangement[pattern.length]
+                        # if item.to_i == arrangement[pattern.length]
                       end
                     end
                   end
