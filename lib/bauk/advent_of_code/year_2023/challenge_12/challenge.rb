@@ -2,10 +2,11 @@
 
 require_relative "../../base_challenge"
 
-# Star two: too high: 7924317551937
-# Star two: too high: 7000000000000
-# Star two: too     : 7957193024696
 # Star two: too low : 1000000000000
+# Star two: too     : 
+# Star two: too high: 7000000000000
+# Star two: too high: 7924317551937
+# Star two: too ?   : 7957192579138
 
 module Bauk
   module AdventOfCode
@@ -65,8 +66,9 @@ module Bauk
               curr.each do |p, pattern_count|
                 pattern = p.clone.split("_")
                 logger.debug { "Adding #{p} + #{slice}" }
-
+                
                 if pattern.length > arrangement.length
+                  puts "TOO LONG: #{pattern.inspect} should match #{arrangement.inspect}"
                   nil # We're too long
                 elsif pattern[-1] && pattern[-1].sub!(/\$$/, "")
                   if pattern[-1].to_i < arrangement[pattern.length - 1]
@@ -129,7 +131,11 @@ module Bauk
             total = 0
             curr.each do |k, v|
               if k.split("_").length == arrangement.length
-                total += v
+                if k.sub(/\$/, "") != arrangement.join("_")
+                  logger.info "NO MATCH! #{k.sub(/\$/, "")} != #{arrangement.join("_")}"
+                else
+                  total += v
+                end
               else
                 logger.debug { "Not long enough combinations: #{k} / #{arrangement}" }
               end
@@ -149,8 +155,8 @@ module Bauk
             # puts "item:#{item}, tail:#{tail}, a_index: #{arrangement_index}, arrangement:#{arrangement[arrangement_index]}, curr_pattern: #{current_pattern}, i: #{index}"
             if arrangement_index >= arrangement.length
               # puts :too_long
+              # true
               false
-              true
             elsif (item.to_i + tail) == arrangement[arrangement_index]
               true
             elsif (item.to_i + tail) < arrangement[arrangement_index] && item.end_with?("$")
