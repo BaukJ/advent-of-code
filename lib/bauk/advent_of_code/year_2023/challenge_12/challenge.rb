@@ -2,6 +2,11 @@
 
 require_relative "../../base_challenge"
 
+# Star two: too high: 7924317551937
+# Star two: too high: 7000000000000
+# Star two: too     : 7957193024696
+# Star two: too low : 1000000000000
+
 module Bauk
   module AdventOfCode
     module Year2023
@@ -11,7 +16,7 @@ module Bauk
           def initialize
             super
             @lines = File.readlines File.join(__dir__, Opts.file), chomp: true
-            @max_section_length = 4
+            @max_section_length = Opts.max_section_length
             @arrangements = []
             @rows = []
             @lines = @lines.map do |line|
@@ -24,7 +29,7 @@ module Bauk
           end
 
           def run
-            logger.warn("Starting challenge #{self.class.name}")
+            logger.info("Starting challenge #{self.class.name}")
             # star_one
             star_two
           end
@@ -32,50 +37,128 @@ module Bauk
           def find_combinations(row, arrangement)
             parts = row.each_slice(@max_section_length).map { |s| s.join }
             # parts = row.join.split(/\.+/) #.map { |p| p.split }
-            logger.info "Generating parts map for #{row.join}"
+            logger.debug "Generating parts map for #{row.join}"
             generate_parts_map parts, arrangement.max
-            logger.info "Generating parts map for #{row.join} DONE"
-            logger.info { "PARTS MAP: #{@parts_map.inspect}" }
-            logger.info { "PARTS COMBINATIONS: #{@part_combinations.inspect}" }
-            find_combinations_from_parts [row], arrangement
+            logger.debug "Generating parts map for #{row.join} DONE"
+            logger.debug { "PARTS MAP: #{@parts_map.inspect}" }
+            logger.debug { "PARTS COMBINATIONS: #{@part_combinations.inspect}" }
+            combinations = find_combinations_from_parts row, arrangement
+            logger.info { "Found #{combinations} combinations for #{row}"}
+            combinations
           end
           
           def find_combinations_from_parts(parts, arrangement)
             curr = { "" => 1 }
-            parts.each do |part|
-              part.each_slice(@max_section_length) do |slice|
-                next_curr = {}
-                # puts slice.inspect
-                combinations = generate_part_combinations(slice)
-                curr.each do |p, pattern_count|
-                  pattern = p.clone.split("_")
-                  puts pattern.inspect
+            # puts parts.inspect
+            # puts parts.length
+            # l = 0
+            # parts.each_slice(@max_section_length) { |s| l += s.length }
+            # puts l
+            parts.each_slice(@max_section_length) do |slice|
+              # puts slice.inspect
+              logger.debug { "Arrangement/current patterns) #{arrangement.join("_")} // #{curr.inspect}" }
+              next_curr = {}
+              combinations = generate_part_combinations(slice.dup)
+              # cominations = @part_combinations[slice]
+              die "NO COMBINATIONS!" if combinations.empty?
+              # puts combinations.inspect
+              curr.each do |p, pattern_count|
+                pattern = p.clone.split("_")
+                logger.debug { "Adding #{p} + #{slice}" }
 
-                  if pattern[-1] && pattern[-1].sub!(/\$$/, "")
-                    if arrangement[pattern.length - 1] < pattern[-1]
-                      tail = pattern.pop
-                      combinations.each do |combination, combination_count|
-                        puts "COMB: #{combination.inspect}"
+                if pattern.length > arrangement.length
+                  nil # We're too long
+                elsif pattern[-1] && pattern[-1].sub!(/\$$/, "")
+                  if pattern[-1].to_i < arrangement[pattern.length - 1]
+                    tail = pattern.pop.to_i
+                    combinations.each do |c, combination_count|
+                      logger.debug { "Checking combination: #{c}" }
+                      combination = c.dup
+                      next if combination.empty? || !combination.sub!(/^\^/, "")
+                      comb_items = combination.split("_")
+                      # puts "COMB ITEMS: #{comb_items}"
+                      # puts :checking_comb
+                      if valid_combination?(pattern, arrangement, comb_items, next_curr, tail)
+                        # puts :valid_comb
+                        # puts "HERE"
+                        head = comb_items.shift
+                        join = (head.to_i + tail).to_s + (head.end_with?("$") ? "$" : "")
+                        next_p = [pattern.join("_"), join, comb_items.join("_")].reject { |o| o.empty? }.map {|o| o.sub /^\^/, "" }.join("_").gsub(/\$_/, "_")
+                        next_curr[next_p] ||= 0
+                        next_curr[next_p] += pattern_count * combination_count
+                        logger.debug { "Added: #{next_p}" }
                       end
-                    else
                     end
                   else
+                    # Reject any that start with a ^
                     combinations.each do |c, combination_count|
-                      combination = c.clone.sub /^\^/, ""
-                      puts "COMB: #{combination.inspect}"
+                      logger.debug { "Checking combination: #{c}" }
+                      combination = c.dup
+                      next if combination.start_with?("^")
                       comb_items = combination.split("_")
-                      good = true
-                      comb_items.each_with_index do |item, index|
-                        # if item.to_i == arrangement[pattern.length]
+                      if valid_combination?(pattern, arrangement, comb_items, next_curr)
+                        next_p = [pattern.join("_"), c].reject { |o| o.empty? }.map {|o| o.sub /^\^/, "" }.join("_").gsub(/\$_/, "_")
+                        next_curr[next_p] ||= 0
+                        next_curr[next_p] += pattern_count * combination_count
+                        logger.debug { "Added: #{next_p}" }
                       end
                     end
                   end
+                else
+                  # puts "AAAAAAAAAAAAAAA: #{slice} / #{combinations.inspect}"
+                  combinations.each do |c, combination_count|
+                    logger.debug { "Checking combination: #{c}" }
+                    combination = c.clone.sub /^\^/, ""
+                    comb_items = combination.split("_")
+                    if valid_combination?(pattern, arrangement, comb_items, next_curr)
+                      next_p = [p, c].reject { |o| o.empty? }.map {|o| o.sub /^\^/, "" }.join("_").gsub(/\$_/, "_")
+                      next_curr[next_p] ||= 0
+                      next_curr[next_p] += pattern_count * combination_count
+                      logger.debug { "Added: #{next_p}" }
+                    end
+                  end
                 end
-                curr = next_curr
+              end
+              curr = next_curr
+              if curr.empty?
+                logger.error "Could not find any combinations!"
+                return 0
+              end
+              logger.debug { "Current combinations sum: #{curr.values.sum}" }
+            end
+            total = 0
+            curr.each do |k, v|
+              if k.split("_").length == arrangement.length
+                total += v
+              else
+                logger.debug { "Not long enough combinations: #{k} / #{arrangement}" }
               end
             end
-            curr.values.sum
-          end 
+            total
+          end
+          
+          def valid_combination?(current_pattern, arrangement, comb_items, next_curr, tail = 0)
+            comb_items.each_with_index do |item, index|
+              return false unless valid_addition?(current_pattern, arrangement, item, index, index == 0 ? tail : 0)
+            end
+            true
+          end
+          
+          def valid_addition?(current_pattern, arrangement, item, index, tail)
+            arrangement_index = current_pattern.length + index
+            # puts "item:#{item}, tail:#{tail}, a_index: #{arrangement_index}, arrangement:#{arrangement[arrangement_index]}, curr_pattern: #{current_pattern}, i: #{index}"
+            if arrangement_index >= arrangement.length
+              # puts :too_long
+              false
+              true
+            elsif (item.to_i + tail) == arrangement[arrangement_index]
+              true
+            elsif (item.to_i + tail) < arrangement[arrangement_index] && item.end_with?("$")
+              true
+            else
+              false
+            end
+          end
 
           def generate_parts_map(parts, longest_run)
             @parts_map ||= {}
@@ -85,11 +168,10 @@ module Bauk
               next if @parts_map[part]
 
               combinations = generate_part_combinations part.chars
-              combinations_keys = combinations.map { |c| c.join("_") }
-              combinations_tally = combinations_keys.tally
+              combinations_tally = combinations.keys.tally
 
               @parts_map[part] = {}
-              combinations_keys.uniq.each do |key|
+              combinations.keys.uniq.each do |key|
                 @parts_map[part][key] = { count: combinations_tally[key], combinations: key.split("_").map(&:to_i) }
               end
               # puts "C keys: #{combinations_keys.inspect}"
@@ -155,8 +237,8 @@ module Bauk
                 # add_halves(combination, generate_part_combinations(slice), new_combination, true)
                 # combination = new_combination
               end
-            elsif part_chars.join.start_with?("#" * @longest_run)
-              return {} # invalid for this generation
+            # elsif part_chars.join.start_with?("#" * @longest_run)
+            #   return {} # invalid for this generation
             elsif part_chars.include? "?"
               part_chars.each_with_index do |char, i|
                 if char == "?"
@@ -177,32 +259,14 @@ module Bauk
             elsif part_chars.empty?
               combination = { }
             else
-              # puts part_chars.join
-              # sleep 0.1
-              c = part_chars.join.split(/\.+/).map(&:length).join("_")
+              c = part_chars.join.split(/\.+/).map(&:length).reject{ |n| n == 0 }.join("_")
               c += "$" if part_chars[-1] == "#"
               c.prepend("^") if part_chars[0] == "#"
               combination = { c => 1 }
-              # combination = { "^#{part_chars.length}$" => 1 }
-              # puts "Part combinations cache: #{@part_combinations.inspect}"
-              # combination_list = []
-              # part_chars.each_with_index do |char, i|
-              #   case char
-              #   when "#" then current_streak += 1
-              #   when "."
-              #     if current_streak.positive?
-              #       combination_list << current_streak
-              #       current_streak = 0
-              #     end
-              #   else die "Invalid char found: #{char}"
-              #   end
-              # end
-              # combination_list << current_streak if current_streak.positive?
-              # combination = { combination_list.join("_") => 1 }
             end
             logger.debug { "#{part_chars.join} => #{combination}" }
             @part_combinations[part_chars.join] = combination
-            logger.info { "Done #{part_chars.join}. Cache size (part_combinations): #{@part_combinations.length}, combination size: #{combination.length}"}
+            logger.debug { "Done #{part_chars.join}. Cache size (part_combinations): #{@part_combinations.length}, combination size: #{combination.length}"}
             combination
           end
 
@@ -292,14 +356,22 @@ module Bauk
           end
 
           def star_two
-            @times = 5
+            @times = Opts.expand
+            # @part_combinations ||= {}
+            # generate_part_combinations(["#", "#", "#", "?"])
+            # exit
+            # puts @rows[2].join.inspect
             @rows.map! do |row|
               (1..@times).map { row.join() }.join("?").chars
             end
+            # puts @rows[2].join.inspect
             @arrangements.map! do |arrangement|
               (1..@times).inject([]) { |obj, i| obj + arrangement }
             end
+            # puts @arrangements[0].inspect
+            # exit
             @total = 0
+            @rows = @rows[0...Opts.rows] if Opts.rows > 0
             @rows.each_with_index do |row, index|
               arrangement = @arrangements[index]
               @total += find_combinations row, arrangement

@@ -14,7 +14,7 @@ module Bauk
         def initialize
           @logger = ::Logger.new($stdout)
           @logger.level = ::Logger::WARN
-          logger.warn "Creating logger"
+          logger.debug "Creating logger"
         end
 
         def self.instance
