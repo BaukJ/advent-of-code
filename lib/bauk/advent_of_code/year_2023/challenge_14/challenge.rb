@@ -31,7 +31,7 @@ module Bauk
                 if cell.include? "#"
                   free_index = false
                 elsif cell.empty?
-                  free_index = index if not free_index
+                  free_index ||= index
                 elsif cell.include? "O"
                   if free_index
                     cell.delete "O"
@@ -44,7 +44,7 @@ module Bauk
               end
             end
           end
-          
+
           def calculate_load
             @load = 0
             @map.columns.each do |column|
@@ -59,8 +59,8 @@ module Bauk
           def roll_cycle
             roll @map.columns
             roll @map.rows
-            roll @map.columns.map { |c| c.reverse }
-            roll @map.rows.map { |r| r.reverse }
+            roll(@map.columns.map(&:reverse))
+            roll(@map.rows.map(&:reverse))
             calculate_load
           end
 
@@ -72,7 +72,7 @@ module Bauk
           end
 
           def star_two
-            @cycles = 1000000000
+            @cycles = 1_000_000_000
             # @cycles = 500
             @loads = {}
             @looped = false
@@ -82,7 +82,6 @@ module Bauk
             @looped = false
             while cycle <= @cycles
               cycle += 1
-              old_load = @load
               if @loads[old_map]
                 unless @looped
                   start_index = @loop_cycle.index old_map
@@ -101,7 +100,7 @@ module Bauk
                 @loop_cycle << old_map
                 puts "#{cycle}/#{@cycles} #{@load} #{@loads[old_map]}"
                 roll_cycle
-                @loads[old_map] = {map: @map.to_s, load: @load}
+                @loads[old_map] = { map: @map.to_s, load: @load }
                 old_map = @map.to_s
               end
               # puts @map.to_s_with_border
