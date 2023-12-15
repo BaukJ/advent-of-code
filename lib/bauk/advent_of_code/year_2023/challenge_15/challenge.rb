@@ -41,7 +41,6 @@ module Bauk
           end
 
           def star_two
-            @hashes = []
             @boxes = {}
             @sequences.each do |code|
               die "ERR" unless code =~ /^(.*)([=-])([0-9]*)$/
@@ -63,8 +62,6 @@ module Bauk
               else
                 die "ERR"
               end
-              # puts @boxes.inspect
-              # @hashes << seq_to_hash(seq)
             end
             @total = 0
             @boxes.each do |box_number, box|

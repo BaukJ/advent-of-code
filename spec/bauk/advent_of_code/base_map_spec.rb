@@ -2,6 +2,10 @@
 
 class Map < Bauk::AdventOfCode::BaseMap; end
 
+def rc(row, column)
+  { row:, column: }
+end
+[]
 RSpec.describe Bauk::AdventOfCode::BaseMap do
   context "empty map" do
     let(:map) { Map.new 5, 7 }
@@ -47,16 +51,61 @@ RSpec.describe Bauk::AdventOfCode::BaseMap do
       expect { map.row(7) }.to raise_error Bauk::AdventOfCode::Error
     end
 
-    it "load line of cells correctly" do
+    it "load a simple line of cells correctly" do
       expect(map.line_of_cells([{ row: 0, column: 0 }, { row: 3, column: 0 }]).flatten).to eq(%w[a A 1 q])
       expect(map.line_of_cells([{ row: 1, column: 1 }, { row: 1, column: 4 }]).flatten).to eq(%w[B C D E])
       expect(map.line_of_cells([{ row: 2, column: 4 }, { row: 2, column: 1 }]).flatten).to eq(%w[5 4 3 2])
       expect(map.line_of_cells([{ row: 4, column: 4 }, { row: 2, column: 4 }]).flatten).to eq(%w[g t 5])
-      expect(map.line_of_cells([{ row: 4, column: 4 }, { row: 4, column: 4 }]).flatten).to eq(%w[])
+    end
+    it "loads a simple path of cells correctly" do
+      expect(map.path_to_cells([{ row: 4, column: 4 }, { row: 4, column: 4 }]).flatten).to eq(%w[])
+    end
+    
+    it "load a multi-point line of cells correctly" do
+      expect(map.line_of_cells([{ row: 0, column: 0 }, { row: 3, column: 0 }, { row: 3, column: 0 }]).flatten).to eq(%w[a A 1 q])
+    end
+    
+    it "fails loading lines if outside boundary" do
+      expect { map.line_of_cells([{ row: 4, column: 4 }, { row: 7, column: 4 }]) }.to raise_error Bauk::AdventOfCode::Error
+    end
+  end
+  
+  context "numeric map" do
+    let(:map) { Map.from_cell_arrays (0..9).map { |r| (0..9).map { |c| "#{r}_#{c}"} } }
+
+    let(:expectations) {
+      [
+        {points: [rc(0, 0), rc(3, 0), rc(3, 0)], line: %w[0_0 1_0 2_0 3_0]},
+        {points: [rc(0, 0), rc(3, 0), rc(0, 0)], line: %w[0_0 1_0 2_0 3_0 2_0 1_0 0_0]},
+        {points: [rc(0, 0), rc(3, 0), rc(0, 0)], line: %w[0_0 1_0 2_0 3_0 2_0 1_0 0_0]},
+        {points: [rc(5, 5), rc(5, 5), rc(5, 5)], line: %w[5_5]},
+        {points: [rc(5, 5), rc(5, 5), rc(5, 5)], line: %w[5_5]},
+        {points: [rc(5, 5), rc(5, 5), rc(5, 5)], line: %w[5_5]},
+      ]
+    }
+
+    it "fails when outside range" do
+      expect { map.line_of_cells([{ row: 0, column: 0 }, { row: -1, column: 0 }]) }.to raise_error Bauk::AdventOfCode::Error
+      expect { map.line_of_cells([{ row: 0, column: 0 }, { row: 0, column: -1 }]) }.to raise_error Bauk::AdventOfCode::Error
+      expect { map.line_of_cells([{ row: 0, column: 0 }, { row: 10, column: 0 }]) }.to raise_error Bauk::AdventOfCode::Error
+      expect { map.line_of_cells([{ row: 0, column: 0 }, { row: 0, column: 10 }]) }.to raise_error Bauk::AdventOfCode::Error
     end
 
-    it "fails loading lines if outside boundary" do
-      # expect { map.line_of_cells([{ row: 4, column: 4 }, { row: 7, column: 4 }]) }.to raise_error Bauk::AdventOfCode::Error
+    it "fails when not a straight line" do
+      expect { map.line_of_cells([rc(0, 0), rc(1, 1)]) }.to raise_error Bauk::AdventOfCode::Error
+    end
+
+    it "loads expected lines of cells correctly" do
+      expectations.each do |expectation|
+        expect(map.line_of_cells(expectation[:points])).to eq(expectation[:line])
+      end
+    end
+
+    it "loads expected path to cells correctly" do
+      expectations.each do |expectation|
+        expect(map.path_to_cells(expectation[:points])).to eq(expectation[:line][1..])
+      end
     end
   end
 end
+

@@ -24,6 +24,16 @@ module Bauk
         map
       end
 
+      def self.from_cell_arrays(arrays)
+        map = new arrays.length, arrays[0].length
+        arrays.each_with_index do |array, row|
+          array.each_with_index do |cell, column|
+            map.replace_cell row, column, cell
+          end
+        end
+        map
+      end
+
       def self.cell_from_char(char, _row, _column)
         case char
         when "." then []
@@ -130,36 +140,45 @@ module Bauk
       end
 
       def line_of_cells(points)
-        line = []
-        # We use up to but not including, so if we have multiple points we don't create duplicate cells at the corner
-        points.each_with_object(points[0]) do |point, previous_point|
-          # Remove last cell if this is a multi-point setup
-          line.pop
+        [cell_from_hash(points[0])] + path_to_cells(points)
+      end
+
+
+      def point_inside_map?(point)
+        return point[:row] >= 0 && point[:row] < @row_count && point[:column] >= 0 && point[:column] < @column_count
+      end
+
+      # line line_of_cells, but omits your starting point
+      def path_to_cells(points)
+        path = []
+        (1...points.length).each do |i|
+          point = points[i]
+          previous_point = points[i-1]
+
+          die { "Invalid point #{point}" } unless point_inside_map? point
+          die { "Invalid point #{previous_point}" } unless point_inside_map? previous_point
 
           if point[:row] == previous_point[:row]
-            Utils.inclusive_bidirectional_range(previous_point[:column], point[:column]).each do |column|
-              line << cell(point[:row], column)
+            Utils.inclusive_bidirectional_range(previous_point[:column], point[:column])[1..].each do |column|
+              path << cell(point[:row], column)
             end
           elsif point[:column] == previous_point[:column]
-            Utils.inclusive_bidirectional_range(previous_point[:row], point[:row]).each do |row|
-              line << cell(row, point[:column])
+            Utils.inclusive_bidirectional_range(previous_point[:row], point[:row])[1..].each do |row|
+              path << cell(row, point[:column])
             end
           else
             die "Cannot generate line of cells not in a straight line"
           end
         end
-        line
-      end
-
-      # line line_of_cells, but omits your starting point
-      def path_to_cells(points)
-        cells = line_of_cells(points)
-        cells.shift
-        cells
+        path
       end
 
       def cell(row, column)
         @map[row][column]
+      end
+
+      def cell_from_hash(hash)
+        cell(hash[:row], hash[:column])
       end
 
       def rows

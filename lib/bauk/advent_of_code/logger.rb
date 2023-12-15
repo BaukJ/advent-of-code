@@ -26,8 +26,9 @@ module Bauk
         @logger ||= Singleton.instance.logger
       end
 
-      def die(message)
-        logger.error message
+      def die(message = nil)
+        logger.error message unless message.nil?
+        logger.error yield if block_given?
         raise Error, message
       end
     end
