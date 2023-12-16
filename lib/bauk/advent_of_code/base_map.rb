@@ -143,9 +143,8 @@ module Bauk
         [cell_from_hash(points[0])] + path_to_cells(points)
       end
 
-
       def point_inside_map?(point)
-        return point[:row] >= 0 && point[:row] < @row_count && point[:column] >= 0 && point[:column] < @column_count
+        point[:row] >= 0 && point[:row] < @row_count && point[:column] >= 0 && point[:column] < @column_count
       end
 
       # line line_of_cells, but omits your starting point
@@ -153,7 +152,7 @@ module Bauk
         path = []
         (1...points.length).each do |i|
           point = points[i]
-          previous_point = points[i-1]
+          previous_point = points[i - 1]
 
           die { "Invalid point #{point}" } unless point_inside_map? point
           die { "Invalid point #{previous_point}" } unless point_inside_map? previous_point
