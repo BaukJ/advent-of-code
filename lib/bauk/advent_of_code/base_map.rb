@@ -85,6 +85,8 @@ module Bauk
       end
 
       def cell_to_s(cell, row_index, column_index)
+        return cell unless cell.is_a? Array
+
         if empty?(row_index, column_index) then "."
         elsif [["o"], "o"].include?(cell) then "\e[48;5;10mo\e[0m"
         elsif !cell.is_a? Array then cell
