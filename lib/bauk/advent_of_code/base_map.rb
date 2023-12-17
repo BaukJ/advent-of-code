@@ -200,6 +200,14 @@ module Bauk
         obj
       end
 
+      def deep_clone
+        new_map = clone
+        new_map.map = @map.map do |row|
+          row.clone
+        end
+        new_map
+      end
+
       def update_map
         new_map = clone
         new_map.map = generate_map

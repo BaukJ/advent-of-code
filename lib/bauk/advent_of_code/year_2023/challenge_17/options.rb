@@ -6,8 +6,8 @@ module Bauk
   module AdventOfCode
     module Year2023
       module Challenge17
-        Opts = Struct.new(:file, :min_heat_loss)
-                     .new("data.txt", 0)
+        Opts = Struct.new(:file, :min_heat_loss, :show_map)
+                     .new("data.txt", 0, false)
       end
     end
   end
