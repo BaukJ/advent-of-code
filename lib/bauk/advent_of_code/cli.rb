@@ -13,6 +13,7 @@ module Bauk
       def initialize
         super
         @opts = Options.new
+        @debug = false
         @parser = OptionParser.new do |opts|
           opts.banner = "Usage: advent-of-code <year> <challenge> [options]"
           add_opts(opts)
@@ -33,6 +34,9 @@ module Bauk
         opts.on("-h", "--help", "Prints this help") do
           puts opts
           exit
+        end
+        opts.on("--debug") do
+          @debug = true
         end
         opts.on("--version", "Prints the program version") do
           puts VERSION
@@ -67,8 +71,9 @@ module Bauk
 
       def run_challenge(challenge_class)
         challenge_class.run
-      rescue Interrupt
+      rescue Interrupt => e
         logger.error "Interupted with Ctrl+C"
+        raise e if @debug
       end
 
       def parse_challenge_options(challenge_module, options, year, challenge)

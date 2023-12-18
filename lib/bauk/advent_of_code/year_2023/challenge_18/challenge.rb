@@ -11,31 +11,10 @@ module Bauk
           def initialize
             super
             @lines = File.readlines File.join(__dir__, Opts.file), chomp: true
-            @map = Map.new 1, 1
             @row = 0
             @column = 0
-            @map.insert @row, @column, "#"
-            puts @map.to_s_with_border
-            puts @map.to_s_with_border
-          end
-
-          def expand(direction)
-            case direction
-            when :U
-              if @row.negative?
-                @map.insert_row 0
-                @row += 1
-              end
-            when :D
-              @map.insert_row if @row > @map.row_max_index
-            when :L
-              if @column.negative?
-                @column += 1
-                @map.insert_column 0
-              end
-            when :R
-              @map.insert_column if @column > @map.column_max_index
-            end
+            @max_column = 0
+            @min_column = 0
           end
 
           def run
@@ -45,7 +24,7 @@ module Bauk
           end
 
           def dig
-            @rows = [[]]
+            @rows = {}
             @lines.each do |line|
               die unless line =~ /^([UDLR]) ([0-9]+) *\(#(.*)(.)\)$/
               if @star_one
@@ -63,9 +42,8 @@ module Bauk
               end
               dig_line2(direction, steps)
             end
-            @rows.map! { |row| row.sort_by{|cell| cell[:column]}.uniq }
             # puts @rows.inspect
-            show_map
+            # show_map
             # fill_trench
             # show_map
           end
@@ -82,73 +60,118 @@ module Bauk
           end
 
           def dig_line2_right(steps)
-            @column += steps
-            @rows[@row] << {column: @column, join: :left }
+            @rows[@row] ||= {}
+            new_column = @column + steps
+            @rows[@row][@column] = new_column
+            @column = new_column
+            @max_column = @column if @column > @max_column
           end
 
           def dig_line2_left(steps)
-            @column -= steps
-            @rows[@row] << {column: @column, join: :right }
+            @rows[@row] ||= {}
+            new_column = @column - steps
+            @rows[@row][new_column] = @column
+            @column = new_column
+            @min_column = @column if @column < @min_column
           end
 
           def dig_line2_down(steps)
-            ((@row + 1)..(@row + steps)).each do |row|
-              @rows << [] if row >= @rows.length
-              @rows[row] << {column: @column, vertical: true}
-            end
             @row += steps
           end
 
           def dig_line2_up(steps)
-            ((@row - steps)..(@row - 1)).to_a.reverse.each do |row|
-              if row.negative?
-                @rows.insert(0, [{column: @column, vertical: true}])
-              else
-                @rows[row] << {column: @column, vertical: true}
-              end
-            end
             @row -= steps
-            @row = 0 if @row.negative?
           end
 
-          def show_map
-            @rows.each do |row|
-              (0..row[0][:column]).each { putc "."}
-              inside = false
-              (1...row.length).each do |index|
-                line_start = row[index - 1]
-                line_end = row[index]
-                inside = !inside if line_start[:vertical] || line_start[:join] == :left
-                on_line = line_start[:join] == :right || line_end[:join] == :left
-                (line_start[:column]...line_end[:column]).each do |i|
-                  if inside then putc "#"
-                  elsif on_line then putc "*"
-                  else putc "."
-                  end
-                  # putc inside || on_line ? "#" : "."
+          def show_map # rubocop:disable Metrics/AbcSize
+            start_index = 0
+            @previous_row = {}
+            @rows.keys.sort.each do |row_index| # rubocop:disable Metrics/BlockLength
+              row = @rows[row_index]
+              # puts "#{start_index} => #{row_index}"
+              ((start_index+1)...row_index).each do
+                # puts "Adding empty row: #{@previous_row.select{ |c| puts c }.length} #{@previous_row.inspect}"
+                (@min_column..@max_column).each do |column|
+                  putc @previous_row[column] ? "#" : "."
                 end
+                puts
               end
-              putc "#"
+
+              start_index = row_index
+              start = @min_column - 1
+              @this_row = @previous_row.dup
+              line_end = nil
+              row.keys.sort.each do |line_start|
+                line_end = row[line_start]
+                ((start+1)...line_start).each { |c| putc @previous_row[c] ? "#" : "." }
+                (line_start..line_end).each do |column|
+                  putc "#"
+                  @this_row[column] = if @previous_row[column]
+                                        if (column == line_start && @previous_row[column - 1]) || (column == line_end && @previous_row[column + 1])
+                                          true
+                                        else
+                                          false
+                                        end
+                                      else
+                                        true
+                                      end
+                end
+                start = line_end
+              end
+              ((line_end+1)..@max_column).each { |c| putc @previous_row[c] ? "#" : "." }
               puts
+              @previous_row = @this_row
             end
             sleep 0.1
           end
 
           def calculate_dug
             @dug = 0
-            @rows.each do |row|
-              inside = false
-              (1...row.length).each do |index|
-                line_start = row[index - 1]
-                line_end = row[index]
-                inside = !inside if line_start[:vertical]
-                on_line = line_start[:join] == :right || line_end[:join] == :left
-                (line_start[:column]...line_end[:column]).each do |i|
-                  @dug += 1 if inside || on_line
+            start_index = 0
+            @previous_row = {}
+            row_keys = @rows.keys.sort
+            on_row = 0
+            row_keys.each do |row_index| # rubocop:disable Metrics/BlockLength
+              on_row += 1
+              logger.info { "Calculating dug GAP for row: #{on_row} out of #{row_keys.length}"}
+              row = @rows[row_index]
+              previously_dug = @previous_row.select{ |_, v| v }.length
+              @dug += previously_dug * (row_index - start_index - 1)
+              
+
+              
+              logger.info { "Calculating dug MAIN for row: #{on_row} out of #{row_keys.length}"}
+              start_index = row_index
+              start = @min_column - 1
+              @this_row = @previous_row.dup
+              line_end = nil
+              row.keys.sort.each do |line_start|
+                line_end = row[line_start]
+                previously_dug = ((start+1)...line_start).to_a.map { |i| @previous_row[i] ? 1 : 0 }.sum
+                @dug += previously_dug
+                # ((start+1)...line_start).each { |c| @dug += 1 if @previous_row[c] }
+                (line_start..line_end).each do |column|
+                  @dug += 1
+                  @this_row[column] = if @previous_row[column]
+                                        if (column == line_start && @previous_row[column - 1]) || (column == line_end && @previous_row[column + 1])
+                                          true
+                                        else
+                                          false
+                                        end
+                                      else
+                                        true
+                                      end
                 end
+                start = line_end
               end
-              @dug += 1
+
+              logger.info { "Calculating dug AFTER for row: #{on_row} out of #{row_keys.length}"}
+              previously_dug = ((line_end+1)..@max_column).to_a.map { |i| @previous_row[i] ? 1 : 0 }.sum
+              @dug += previously_dug
+              # ((line_end+1)..@max_column).each { |c| @dug += 1 if @previous_row[c] }
+              @previous_row = @this_row
             end
+            puts @dug
             @dug
           end
 
@@ -160,8 +183,8 @@ module Bauk
 
           def star_two
             @star_one = false
-            # dig
-            # logger.warn "Star two answer: #{calculate_dug}"
+            dig
+            logger.warn "Star two answer: #{calculate_dug}"
           end
         end
       end
