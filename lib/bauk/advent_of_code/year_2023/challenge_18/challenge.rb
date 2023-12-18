@@ -135,40 +135,37 @@ module Bauk
               on_row += 1
               logger.info { "Calculating dug GAP for row: #{on_row} out of #{row_keys.length}"}
               row = @rows[row_index]
-              previously_dug = @previous_row.select{ |_, v| v }.length
+              previously_dug = @previous_row.length
               @dug += previously_dug * (row_index - start_index - 1)
               
 
               
-              logger.info { "Calculating dug MAIN for row: #{on_row} out of #{row_keys.length}"}
+              logger.debug { "Calculating dug MAIN for row: #{on_row} out of #{row_keys.length}"}
               start_index = row_index
               start = @min_column - 1
               @this_row = @previous_row.dup
               line_end = nil
               row.keys.sort.each do |line_start|
                 line_end = row[line_start]
-                previously_dug = ((start+1)...line_start).to_a.map { |i| @previous_row[i] ? 1 : 0 }.sum
+                previously_dug = @previous_row.keys.select { |k| k > start && k < line_start }.count
                 @dug += previously_dug
-                # ((start+1)...line_start).each { |c| @dug += 1 if @previous_row[c] }
                 (line_start..line_end).each do |column|
                   @dug += 1
-                  @this_row[column] = if @previous_row[column]
-                                        if (column == line_start && @previous_row[column - 1]) || (column == line_end && @previous_row[column + 1])
-                                          true
-                                        else
-                                          false
-                                        end
-                                      else
-                                        true
-                                      end
+                  if @previous_row[column]
+                    unless (column == line_start && @previous_row[column - 1]) || (column == line_end && @previous_row[column + 1])
+                      @this_row.delete(column)
+                    end
+                  else
+                    @this_row[column] = true
+                  end
                 end
                 start = line_end
               end
 
-              logger.info { "Calculating dug AFTER for row: #{on_row} out of #{row_keys.length}"}
-              previously_dug = ((line_end+1)..@max_column).to_a.map { |i| @previous_row[i] ? 1 : 0 }.sum
+              logger.debug { "Calculating dug AFTER for row: #{on_row} out of #{row_keys.length}"}
+
+              previously_dug = @previous_row.keys.select { |k| k > line_end && k <= @max_column }.count
               @dug += previously_dug
-              # ((line_end+1)..@max_column).each { |c| @dug += 1 if @previous_row[c] }
               @previous_row = @this_row
             end
             puts @dug
