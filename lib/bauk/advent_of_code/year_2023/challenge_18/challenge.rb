@@ -45,6 +45,7 @@ module Bauk
           end
 
           def dig
+            @rows = [[true]]
             @lines.each do |line|
               die unless line =~ /^([UDLR]) ([0-9]+) *\(#(.*)(.)\)$/
               if @star_one
@@ -60,7 +61,7 @@ module Bauk
                             end
                 steps = $3.to_i(16)
               end
-              dig_line(direction, steps)
+              dig_line2(direction, steps)
             end
             show_map
             fill_trench
@@ -74,7 +75,7 @@ module Bauk
                 inside = !inside
               elsif inside
                 fill_empties(1, index)
-                return
+                break
               end
             end
             # @map.rows.each do |row|
@@ -136,27 +137,82 @@ module Bauk
             end
           end
 
+          def dig_line2(direction, steps)
+            logger.debug { "DIG2: #{direction} #{steps}" }
+            # show_map
+            case direction
+            when :R then (@column..(@column + steps)).each { dig_line2_right(steps) }
+            when :D then (@column..(@column + steps)).each { dig_line2_down }
+            when :U then (@column..(@column + steps)).each { dig_line2_up }
+            when :L then (@column..(@column + steps)).each { dig_line2_left }
+            end
+            puts @rows.length
+          end
+
+          def dig_line2_right
+            @column += 1
+            if @column >= @rows[@row].length
+              @rows.each do |row|
+                row << false
+              end
+            end
+            @rows[@row][@column] = true
+          end
+
+          def dig_line2_left
+            @column -= 1
+            if @column < 0
+              @rows.each do |row|
+                row.insert 0, false
+              end
+              @column = 0
+            end
+            @rows[@row][@column] = true
+          end
+
+          def dig_line2_down
+            @row += 1
+            if @row >= @rows.length
+              @rows << (1..@rows[0].length).map { false }
+            end
+            @rows[@row][@column] = true
+          end
+
+          def dig_line2_up
+            @row -= 1
+            if @row < 0
+              @rows.insert 0, (1..@rows[0].length).map { false }
+              @row = 0
+            end
+            @rows[@row][@column] = true
+          end
+
           def post_dig(direction)
             expand(direction)
             if @map.empty? @row, @column
               @map.insert @row, @column, "#"
-              show_map
+              # show_map
             else
               logger.warn "Hit an empty block: #{@row}/#{@column}"
             end
           end
 
           def show_map
-            puts @map.to_s_with_border
+            # puts @map.to_s_with_border
+            @rows.each do |row|
+              puts row.map { |dug| dug ? "#" : " "}.join
+            end
             sleep 0.1
           end
 
           def star_one
+            @star_one = true
             # dig
             logger.warn "Star one answer: #{@map.cells.flatten.length}"
           end
 
           def star_two
+            @star_one = false
             dig
             logger.warn "Star two answer: #{@map.cells.flatten.length}"
           end
