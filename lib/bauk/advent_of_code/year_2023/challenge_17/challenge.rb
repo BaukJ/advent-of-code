@@ -16,7 +16,7 @@ module Bauk
             left: %i[down up],
             right: %i[down up],
             up: %i[right left],
-            down: %i[right left],
+            down: %i[right left]
           }.freeze
 
           def initialize
@@ -42,9 +42,9 @@ module Bauk
             # been_key = "#{row}_#{column}_#{direction}"
             been_key = "#{row}_#{column}_#{direction}_#{straights}"
             do_sides = true
-            step = {row:, column:}
+            step = { row:, column: }
             steps_backwards += 1 if %i[up left].include? direction
-            
+
             if @min_heat_loss && heat_loss >= @min_heat_loss
               return
             elsif steps_backwards > @max_steps_backwards
@@ -59,7 +59,7 @@ module Bauk
               show_map(steps + [step]) if logger.info?
               logger.warn "FINISHED: #{heat_loss} (positions checked: #{@done_positions.underscore})"
               return
-            elsif @min_heat_loss && (heat_loss + ((@map.row_max_index + @map.column_max_index - row - column)*2)) >= @min_heat_loss
+            elsif @min_heat_loss && (heat_loss + ((@map.row_max_index + @map.column_max_index - row - column) * 2)) >= @min_heat_loss
               return
             elsif @been[been_key] && heat_loss >= @been[been_key][:heat_loss]
               return
@@ -85,24 +85,28 @@ module Bauk
               #   end
               # end
             end
-            @been[been_key] = { heat_loss:, straights:}
+
+            @been[been_key] = { heat_loss:, straights: }
             @done_positions += 1
             show_map(steps + [step]) if Opts.show_map
-
 
             if %i[down right].include? direction
               # We're going the right way so do straight first
               if straights < @max_straights
                 do_position(*calculate_row_colume(row, column, direction), direction, straights + 1, heat_loss, steps + [step], steps_backwards)
               end
-              Sides[direction].each do |side|
-                do_position(*calculate_row_colume(row, column, side), side, 1, heat_loss, steps + [step], steps_backwards)
-              end if do_sides && straights >= @min_straights_before_turn
+              if do_sides && straights >= @min_straights_before_turn
+                Sides[direction].each do |side|
+                  do_position(*calculate_row_colume(row, column, side), side, 1, heat_loss, steps + [step], steps_backwards)
+                end
+              end
             else
               # We're going the wrong way, so try changing direction first
-              Sides[direction].each do |side|
-                do_position(*calculate_row_colume(row, column, side), side, 1, heat_loss, steps + [step], steps_backwards)
-              end if do_sides && straights >= @min_straights_before_turn
+              if do_sides && straights >= @min_straights_before_turn
+                Sides[direction].each do |side|
+                  do_position(*calculate_row_colume(row, column, side), side, 1, heat_loss, steps + [step], steps_backwards)
+                end
+              end
               if straights < @max_straights
                 do_position(*calculate_row_colume(row, column, direction), direction, straights + 1, heat_loss, steps + [step], steps_backwards)
               end
@@ -118,7 +122,8 @@ module Bauk
             elsif @min_heat_loss && (heat_loss - row - column + @map.row_max_index + @map.column_max_index) >= @min_heat_loss
               return true
             end
-            @been[been_key] = { heat_loss:, straights:}
+
+            @been[been_key] = { heat_loss:, straights: }
             false
           end
 
@@ -143,7 +148,7 @@ module Bauk
           end
 
           def star_one
-            @min_heat_loss = Opts.min_heat_loss == 0 ? nil : Opts.min_heat_loss
+            @min_heat_loss = Opts.min_heat_loss.zero? ? nil : Opts.min_heat_loss
             @been = {}
             @done_positions = 0
             @max_straights = 3
@@ -155,7 +160,7 @@ module Bauk
           end
 
           def star_two
-            @min_heat_loss = Opts.min_heat_loss == 0 ? nil : Opts.min_heat_loss
+            @min_heat_loss = Opts.min_heat_loss.zero? ? nil : Opts.min_heat_loss
             @been = {}
             @done_positions = 0
             @max_straights = 10

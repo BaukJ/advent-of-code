@@ -89,7 +89,7 @@ module Bauk
             @rows.keys.sort.each do |row_index| # rubocop:disable Metrics/BlockLength
               row = @rows[row_index]
               # puts "#{start_index} => #{row_index}"
-              ((start_index+1)...row_index).each do
+              ((start_index + 1)...row_index).each do
                 # puts "Adding empty row: #{@previous_row.select{ |c| puts c }.length} #{@previous_row.inspect}"
                 (@min_column..@max_column).each do |column|
                   putc @previous_row[column] ? "#" : "."
@@ -103,7 +103,7 @@ module Bauk
               line_end = nil
               row.keys.sort.each do |line_start|
                 line_end = row[line_start]
-                ((start+1)...line_start).each { |c| putc @previous_row[c] ? "#" : "." }
+                ((start + 1)...line_start).each { |c| putc @previous_row[c] ? "#" : "." }
                 (line_start..line_end).each do |column|
                   putc "#"
                   @this_row[column] = if @previous_row[column]
@@ -118,7 +118,7 @@ module Bauk
                 end
                 start = line_end
               end
-              ((line_end+1)..@max_column).each { |c| putc @previous_row[c] ? "#" : "." }
+              ((line_end + 1)..@max_column).each { |c| putc @previous_row[c] ? "#" : "." }
               puts
               @previous_row = @this_row
             end
@@ -133,14 +133,12 @@ module Bauk
             on_row = 0
             row_keys.each do |row_index| # rubocop:disable Metrics/BlockLength
               on_row += 1
-              logger.info { "Calculating dug GAP for row: #{on_row} out of #{row_keys.length}"}
+              logger.info { "Calculating dug GAP for row: #{on_row} out of #{row_keys.length}" }
               row = @rows[row_index]
               previously_dug = @previous_row.length
               @dug += previously_dug * (row_index - start_index - 1)
-              
 
-              
-              logger.debug { "Calculating dug MAIN for row: #{on_row} out of #{row_keys.length}"}
+              logger.debug { "Calculating dug MAIN for row: #{on_row} out of #{row_keys.length}" }
               start_index = row_index
               start = @min_column - 1
               @this_row = @previous_row.dup
@@ -152,9 +150,7 @@ module Bauk
                 (line_start..line_end).each do |column|
                   @dug += 1
                   if @previous_row[column]
-                    unless (column == line_start && @previous_row[column - 1]) || (column == line_end && @previous_row[column + 1])
-                      @this_row.delete(column)
-                    end
+                    @this_row.delete(column) unless (column == line_start && @previous_row[column - 1]) || (column == line_end && @previous_row[column + 1])
                   else
                     @this_row[column] = true
                   end
@@ -162,7 +158,7 @@ module Bauk
                 start = line_end
               end
 
-              logger.debug { "Calculating dug AFTER for row: #{on_row} out of #{row_keys.length}"}
+              logger.debug { "Calculating dug AFTER for row: #{on_row} out of #{row_keys.length}" }
 
               previously_dug = @previous_row.keys.select { |k| k > line_end && k <= @max_column }.count
               @dug += previously_dug
@@ -189,4 +185,4 @@ module Bauk
   end
 end
 
-#80169 high
+# 80169 high

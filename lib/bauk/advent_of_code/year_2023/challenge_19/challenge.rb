@@ -19,7 +19,10 @@ module Bauk
                 parts = true
               elsif parts
                 die unless line =~ /^{(.*)}$/
-                @parts << $1.split(",").to_h { |a| k, v = a.split("="); [k.to_sym, v.to_i] }
+                @parts << $1.split(",").to_h do |a|
+                  k, v = a.split("=")
+                  [k.to_sym, v.to_i]
+                end
               else
                 die "Invalid" unless line =~ /^([a-z]*){(.*)}$/
                 workflow = $1
@@ -52,9 +55,7 @@ module Bauk
           def parse_parts
             accepted = []
             @parts.each do |part|
-              if put_part_through_workflow part, "in"
-                accepted << part
-              end
+              accepted << part if put_part_through_workflow part, "in"
             end
             accepted
           end
@@ -62,7 +63,9 @@ module Bauk
           def parse_possible_parts
             max_value = 4000
             accepted = []
-            part_ranges = [{workflow: "in", attr: {x: {start: 1, end: max_value}, m: {start: 1, end: max_value}, a: {start: 1, end: max_value}, s: {start: 1, end: max_value}}}]
+            part_ranges = [{ workflow: "in",
+                             attr: { x: { start: 1, end: max_value }, m: { start: 1, end: max_value }, a: { start: 1, end: max_value },
+                                     s: { start: 1, end: max_value } } }]
             until part_ranges.empty?
               new_ranges = []
               part_ranges.each do |part_range|
@@ -88,10 +91,10 @@ module Bauk
             current_attr = part_attrs.dup
             workflow.each do |rule|
               if rule.is_a? String
-                new_ranges << {workflow: rule, attr: current_attr}
+                new_ranges << { workflow: rule, attr: current_attr }
               else
                 accepted, ignored = split_range(rule, current_attr)
-                new_ranges << {workflow: rule[:destination], attr: accepted} if accepted
+                new_ranges << { workflow: rule[:destination], attr: accepted } if accepted
                 current_attr = ignored
                 break unless ignored
               end
@@ -100,7 +103,7 @@ module Bauk
           end
 
           def split_range(rule, attr_range) # rubocop:disable Metrics/AbcSize
-            logger.debug { "Split range: rule:#{rule}, attr_range: #{attr_range.inspect}"}
+            logger.debug { "Split range: rule:#{rule}, attr_range: #{attr_range.inspect}" }
             if rule[:check] == ">"
               if attr_range[rule[:attr]][:start] > rule[:value]
                 # All get passed through
@@ -113,53 +116,51 @@ module Bauk
                 rend = attr_range[rule[:attr]][:end]
                 rmid = rule[:value]
                 [
-                  attr_range.merge({rule[:attr] => {start: rmid+1, end: rend}}),
-                  attr_range.merge({rule[:attr] => {start: rstart, end: rmid}})
+                  attr_range.merge({ rule[:attr] => { start: rmid + 1, end: rend } }),
+                  attr_range.merge({ rule[:attr] => { start: rstart, end: rmid } })
                 ]
               end
+            elsif attr_range[rule[:attr]][:end] < rule[:value]
+              [attr_range, nil]
+            # All get passed through
+            elsif attr_range[rule[:attr]][:start] >= rule[:value]
+              # None get passed through
+              [nil, attr_range]
             else
-              if attr_range[rule[:attr]][:end] < rule[:value]
-                # All get passed through
-                [attr_range, nil]
-              elsif attr_range[rule[:attr]][:start] >= rule[:value]
-                # None get passed through
-                [nil, attr_range]
-              else
-                rstart = attr_range[rule[:attr]][:start]
-                rend = attr_range[rule[:attr]][:end]
-                rmid = rule[:value]
-                [
-                  attr_range.merge({rule[:attr] => {start: rstart, end: rmid-1}}),
-                  attr_range.merge({rule[:attr] => {start: rmid, end: rend}})
-                ]
-              end
+              rstart = attr_range[rule[:attr]][:start]
+              rend = attr_range[rule[:attr]][:end]
+              rmid = rule[:value]
+              [
+                attr_range.merge({ rule[:attr] => { start: rstart, end: rmid - 1 } }),
+                attr_range.merge({ rule[:attr] => { start: rmid, end: rend } })
+              ]
             end
           end
 
           def put_part_through_workflow(part, workflow)
             die "Couldn't find workflow #{workflow}" unless @workflows[workflow]
             @workflows[workflow].each do |rule|
-              if rule.is_a? String then return parse_destination(part, rule)
-              else
-                if rule[:check] == ">"
-                  return parse_destination(part, rule[:destination]) if part[rule[:attr]] > rule[:value]
-                else
-                  return parse_destination(part, rule[:destination]) if part[rule[:attr]] < rule[:value]
-                end
+              return parse_destination(part, rule) if rule.is_a? String
+
+              if rule[:check] == ">"
+                return parse_destination(part, rule[:destination]) if part[rule[:attr]] > rule[:value]
+              elsif part[rule[:attr]] < rule[:value]
+                return parse_destination(part, rule[:destination])
               end
             end
           end
 
           def parse_destination(part, destination)
-            if destination == "A" then return true
-            elsif destination == "R" then return false
-            else return put_part_through_workflow(part, destination)
+            if destination == "A" then true
+            elsif destination == "R" then false
+            else
+              put_part_through_workflow(part, destination)
             end
           end
 
           def star_one
             accepted = parse_parts
-            total = accepted.map { |p| p.values }.flatten.sum
+            total = accepted.map(&:values).flatten.sum
             logger.warn "Star one answer: #{total}"
           end
 
@@ -171,7 +172,7 @@ module Bauk
           def calculate_total_from_ranges(ranges)
             total = 0
             ranges.each do |range|
-              permutations = range[:attr].values.map { |v| v[:end] + 1 - v[:start] }.inject(1){ |x,y| x * y }
+              permutations = range[:attr].values.map { |v| v[:end] + 1 - v[:start] }.inject(1) { |x, y| x * y }
               total += permutations
             end
             total
