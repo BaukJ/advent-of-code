@@ -14,7 +14,7 @@ module Bauk
         def initialize
           @logger = ::Logger.new($stdout)
           @logger.level = ::Logger::WARN
-          @logger.formatter = proc do |severity, datetime, progname, msg|
+          @logger.formatter = proc do |severity, datetime, _progname, msg|
             "#{datetime.strftime("%H:%M:%S")}(#{severity.ljust(5)}) #{msg}\n"
           end
           logger.debug "Creating logger"

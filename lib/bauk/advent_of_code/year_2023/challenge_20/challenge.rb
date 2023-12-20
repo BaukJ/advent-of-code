@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # s1 too high 908202812
 
 require_relative "../../base_challenge"
@@ -15,7 +16,7 @@ module Bauk
             @lines = File.readlines File.join(__dir__, Opts.file), chomp: true
             @pattern_length = 10
             @modules = {
-              button: {dests: [:broadcaster], type: :b}
+              button: { dests: [:broadcaster], type: :b }
             }
             @inputs_map = {}
             @lines.each do |line|
@@ -28,11 +29,11 @@ module Bauk
                 @inputs_map[dest][name] = false
               end
               if name == :broadcaster
-                @modules[name] = {dests:, type: :b}
+                @modules[name] = { dests:, type: :b }
               elsif type == "%"
-                @modules[name] = {dests:, on: false, type: :f}
+                @modules[name] = { dests:, on: false, type: :f }
               elsif type == "&"
-                @modules[name] = {dests:, type: :c}
+                @modules[name] = { dests:, type: :c }
               end
             end
             @modules.each do |name, mod|
@@ -43,7 +44,7 @@ module Bauk
 
           def reset_modules
             @modules = JSON.parse(@reset_modules, symbolize_names: true)
-            @modules.each do |_, mod|
+            @modules.each_value do |mod|
               mod[:type] = mod[:type].to_sym
               mod[:dests].map!(&:to_sym)
             end
@@ -56,7 +57,7 @@ module Bauk
           end
 
           def count_pulses
-            pulses = [{high: false, dest: :broadcaster, source: :button}]
+            pulses = [{ high: false, dest: :broadcaster, source: :button }]
             high_count = 0
             low_count = 0
             @rx = 0
@@ -73,7 +74,7 @@ module Bauk
 
                 case mod[:type]
                 when :b
-                  new_pulses += mod[:dests].map { |d| {source: pulse[:dest], dest: d, high: pulse[:high]}}
+                  new_pulses += mod[:dests].map { |d| { source: pulse[:dest], dest: d, high: pulse[:high] } }
                 when :f
                   new_pulses += calculate_f_pulses(mod, pulse)
                 when :c
@@ -87,7 +88,7 @@ module Bauk
           end
 
           def do_pulses # rubocop:disable Metrics/AbcSize
-            pulses = [{high: false, dest: :broadcaster, source: :button}]
+            pulses = [{ high: false, dest: :broadcaster, source: :button }]
             # @initial_pulses ||= @modules[:broadcaster][:dests].map { |d| {source: :broadcaster, dest: d, high: false}}
             # pulses = @initial_pulses
             @rx = 0
@@ -101,7 +102,7 @@ module Bauk
 
                 case mod[:type]
                 when :b
-                  new_pulses += mod[:dests].map { |d| {source: pulse[:dest], dest: d, high: pulse[:high]}}
+                  new_pulses += mod[:dests].map { |d| { source: pulse[:dest], dest: d, high: pulse[:high] } }
                 when :f
                   new_pulses += calculate_f_pulses(mod, pulse)
                 when :c
@@ -113,20 +114,19 @@ module Bauk
             end
           end
 
-
           def calculate_f_pulses(mod, pulse)
             return [] if pulse[:high]
 
             mod[:on] = !mod[:on] # flip
             # puts mod[:on]
-            mod[:dests].map { |d| {source: pulse[:dest], dest: d, high: mod[:on] }}
+            mod[:dests].map { |d| { source: pulse[:dest], dest: d, high: mod[:on] } }
           end
 
           def calculate_c_pulses(mod, pulse)
             mod[:inputs][pulse[:source]] = pulse[:high]
 
             # puts "#{@round}) #{mod}" if pulse[:dest] == :bb && mod[:inputs].values.select { |t| t }.length > 1
-            #if pulse[:dest] == :bb && mod[:inputs].values.any?
+            # if pulse[:dest] == :bb && mod[:inputs].values.any?
 
             # puts "received: #{pulse}| pre: #{mod}"
             high = !mod[:inputs].values.all?
@@ -138,7 +138,7 @@ module Bauk
           def modules_key
             # JSON.dump(@modules.reject { |k,v| k == :bb || v[:dests].include?(:bb) } )
             # JSON.dump(@modules.select { |_, v| v[:type] == :f } )
-            @modules.select { |_, v| v[:type] == :f }.sort.map { |k,v| v[:on] ? "O" : "_" }.join
+            @modules.select { |_, v| v[:type] == :f }.sort.map { |_k, v| v[:on] ? "O" : "_" }.join
             # @modules.sort.map { |k,v| v[:type] == :f ? (v[:on] ? "O" : "_") : "" }.join
             # @modules.sort.map(&:last).map do |mod|
             #   mod[:type]
@@ -149,13 +149,13 @@ module Bauk
             reset_modules
             low_total = 0
             high_total = 0
-            1000.times.each do |r|
+            1000.times.each do |_r|
               counts = count_pulses
               low_total += counts[0]
               high_total += counts[1]
             end
             logger.info { "Low: #{low_total} | Hight: #{high_total}" }
-            logger.warn "Star one answer: #{low_total*high_total}"
+            logger.warn "Star one answer: #{low_total * high_total}"
           end
 
           def find_important_modules
@@ -165,7 +165,7 @@ module Bauk
               important = important.map do |i|
                 new_important = []
                 # puts i
-                @inputs_map[i]&.keys&.each do |key|
+                @inputs_map[i]&.each_key do |key|
                   new_important << key unless found[key]
                   found[key] = true
                 end
@@ -177,8 +177,8 @@ module Bauk
           end
 
           def get_loops # rubocop:disable Metrics/AbcSize
-            @loops = @modules[:broadcaster][:dests].map { |d| [d, {items: [d], cache: {}, ends: []}] }.to_h
-            @loops.each do |k,loop|
+            @loops = @modules[:broadcaster][:dests].to_h { |d| [d, { items: [d], cache: {}, ends: [] }] }
+            @loops.each_value do |loop|
               loop[:items].each do |mod|
                 # puts mod
                 @modules[mod][:dests].each do |dest|
@@ -199,10 +199,11 @@ module Bauk
               do_pulses
               @loops.each do |loop_name, loop|
                 next if loop[:size]
-                cache_key = (@modules.filter { |k,_| loop[:items].include? k }.sort.map do |k,v|
+
+                cache_key = (@modules.filter { |k, _| loop[:items].include? k }.sort.map do |_k, v|
                   case v[:type]
                   when :f then v[:on] ? "#" : "_"
-                  when :c then v[:inputs].sort.map { |_,i| i ? "^" : "v" }.join
+                  when :c then v[:inputs].sort.map { |_, i| i ? "^" : "v" }.join
                   else ""
                   end
                 end).join
@@ -230,27 +231,27 @@ module Bauk
                 puts "| #{prefix}*** #{dest}"
               else
                 @shown[dest] = true
-                show_map dest, prefix + "| "
+                show_map dest, "#{prefix}| "
               end
             end
             # @modules.each do |name, mod|
             #   puts "#{name} => #{mod[:dests].join(" ")}"
             # end
-          end 
+          end
 
           def star_two
             get_loops
             round = 0
             logg_round = 1
-            logger.warn "Star two answer: #{@loops.map { |_,v| v[:size] }.inject(1, :lcm)}"
+            logger.warn "Star two answer: #{@loops.map { |_, v| v[:size] }.inject(1, :lcm)}"
             # exit
-            
+
             increment = @loops.values.first[:size] * @loops.values.last[:size]
             loop do
               round += increment
-              logger.info { "#{round}) #{@loops.values.map { |v| round % v[:size] == 0 ? "*" : "_" }.join}" }
+              logger.info { "#{round}) #{@loops.values.map { |v| (round % v[:size]).zero? ? "*" : "_" }.join}" }
               found = true
-              @loops.each do |loop_name, loop|
+              @loops.each_value do |loop|
                 found = false if round % loop[:size] != 0
               end
               if round > logg_round
@@ -262,7 +263,6 @@ module Bauk
             end
             logger.warn "Star two answer: #{round}"
           end
-
 
           # def guess_flip(round, actual_flip)
           #   @loop ||= {}
