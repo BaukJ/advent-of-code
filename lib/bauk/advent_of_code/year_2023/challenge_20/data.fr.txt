@@ -1,0 +1,5 @@
+
+%fr -> ms, zm
+&ms -> br, nl, px, vg, vr, ks, fr
+%br -> px
+%px -> nl
