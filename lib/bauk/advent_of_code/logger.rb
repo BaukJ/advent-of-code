@@ -14,12 +14,19 @@ module Bauk
         def initialize
           @logger = ::Logger.new($stdout)
           @logger.level = ::Logger::WARN
+          @logger.formatter = proc do |severity, datetime, progname, msg|
+            "#{datetime.strftime("%H:%M:%S")}(#{severity.ljust(5)}) #{msg}\n"
+          end
           logger.debug "Creating logger"
         end
 
         def self.instance
           @instance ||= Singleton.new
         end
+      end
+
+      def self.static
+        Singleton.instance.logger
       end
 
       def logger

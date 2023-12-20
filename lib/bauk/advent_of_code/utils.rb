@@ -3,6 +3,8 @@
 module Bauk
   module AdventOfCode
     module Utils
+      PRETTY_CACHE = true
+
       def self.bidirectional_range(x, y)
         if x < y
           (x...y).to_a
@@ -24,12 +26,22 @@ module Bauk
         dir = File.expand_path("..", file)
         FileUtils.mkdir_p dir
         if File.exist? file
+          Logger.static.warn "Loading cache: #{id}"
           data = JSON.load_file file, symbolize_names:
         else
+          Logger.static.warn "Generating cache: #{id} (pretty: #{PRETTY_CACHE})"
           data = yield
-          File.write file, JSON.dump(data)
+          File.write file, PRETTY_CACHE ? JSON.pretty_generate(data) : JSON.dump(data)
         end
         data
+      end
+
+      def self.cache_save(id, data)
+        file = File.expand_path("../../../cache/#{id}.json", __dir__)
+        dir = File.expand_path("..", file)
+        FileUtils.mkdir_p dir
+        File.write file, PRETTY_CACHE ? JSON.pretty_generate(data) : JSON.dump(data)
+        Logger.static.warn "Saved cache: #{id} (pretty: #{PRETTY_CACHE})"
       end
     end
   end
