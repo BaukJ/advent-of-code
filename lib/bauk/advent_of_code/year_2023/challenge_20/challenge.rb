@@ -9,7 +9,7 @@ module Bauk
     module Year2023
       module Challenge20
         # Challenge for 2023/20
-        class Challenge < BaseChallenge
+        class Challenge < BaseChallenge # rubocop:disable Metrics/ClassLength
           def initialize
             super
             @lines = File.readlines File.join(__dir__, Opts.file), chomp: true
@@ -176,7 +176,7 @@ module Bauk
             puts @modules.length
           end
 
-          def get_loops
+          def get_loops # rubocop:disable Metrics/AbcSize
             @loops = @modules[:broadcaster][:dests].map { |d| [d, {items: [d], cache: {}, ends: []}] }.to_h
             @loops.each do |k,loop|
               loop[:items].each do |mod|
@@ -192,7 +192,6 @@ module Bauk
             end
             puts @loops
 
-            
             reset_modules
             round = 0
             until @loops.values.all? { |v| v[:size] }
@@ -204,21 +203,19 @@ module Bauk
                   case v[:type]
                   when :f then v[:on] ? "#" : "_"
                   when :c then v[:inputs].sort.map { |_,i| i ? "^" : "v" }.join
-                else ""
-                end
-              end).join
-              # puts cache_key if loop_name == :fr
+                  else ""
+                  end
+                end).join
+                # puts cache_key if loop_name == :fr
                 # puts "FINAL IS TRUE (#{round}/#{loop_name})" if @modules[loop[:final]][:inputs].values.none?
                 if loop[:cache][cache_key]
                   logger.warn "Found loop for #{loop_name}, size: #{round}"
-                  loop[:size] = round
+                  loop[:size] = round - 1 # Damn this -1 with no example answers for part 2!!!
                 else
                   loop[:cache][cache_key] = true
                 end
               end
-              exit if round >10000
             end
-            exit
           end
 
           def show_map(name = :broadcaster, prefix = "")
@@ -243,76 +240,27 @@ module Bauk
 
           def star_two
             get_loops
-            # puts modules_key
-            # return
-            reset_modules
-            # show_map
-            # return
-            # find_important_modules
-            # return
-            die unless @modules[:bb] # This goes to rx but isn't in the test data
-            @round = Opts.start_round
-
-            if @round > 0
-              @modules = Utils.cache("y23c20_#{@round}") do
-                @round.times do
-                  count_pulses
-                end
-                @modules
-              end
-              @modules.each do |_, mod|
-                mod[:type] = mod[:type].to_sym
-                mod[:dests].map!(&:to_sym)
-              end
-            end
+            round = 0
+            logg_round = 1
+            logger.warn "Star two answer: #{@loops.map { |_,v| v[:size] }.inject(1, :lcm)}"
+            # exit
             
-            @flips = {}
-            @round_cache = {}
-            puts "      " + (0..50).map { |i| i.to_s[-1] }.join
+            increment = @loops.values.first[:size] * @loops.values.last[:size]
             loop do
-              @round += 1
-              do_pulses
-              puts @modules[:bb] if @modules[:bb][:inputs].values.any?
-              break if @rx.positive?
-              # puts @round if @round.to_s =~ /^10*$/
-              # Utils.cache_save("y23c20_#{@round}", @modules) if @round % 100_000 == 0
-              # puts @modules.sort.map { |_,v| v }[3]
-              break if @round >= 5000
-              # puts (@modules.sort.map do |k,v|
-              #   case v[:type]
-              #   when :f then v[:on] ? "#" : "_"
-              #   when :c then v[:inputs].sort.map { |_,i| i ? "^" : "v" }.join
-              #   else ""
-              #   end
-              # end).join
-
-              
-              # mkey = modules_key
-              # if @round_cache[mkey]
-              #   puts "FOUND LOOP!!!!! #{@round}"
-              #   return
-              # else
-              #   @round_cache[mkey] = true
-              # end
-              # # expected_c = @modules.select { |k, v| v[:type] == :c }.sort.map { |k, v| v[:inputs].values.all? ? "O" : "_" }.join
-              # expected_c = @modules.select { |k, v| v[:type] == :c }.sort.map { |k, v| v[:inputs].sort.map { |_,high| high ? "O" : "_" } }.join("-")
-              # puts "#{@round}) #{expected_c}" unless expected_c == "_O_OO_O__"
-
-              # expected_flip = @modules.select { |k, v| v[:type] == :f }.sort.map { |k, v| v[:on] ? "O" : "_" }.join
-              # guessed_flip = guess_flip(@round, expected_flip)
-              # # puts "#{@round.to_s.rjust(4)}) #{expected_flip}  (#{@loop.length}/#{expected_flip.length})"
-              # # puts "#{@round.to_s.rjust(4)}) #{guessed_flip}"
-              # if expected_flip != guessed_flip
-              #   puts
-              #   puts (0..50).map { |i| i.to_s[-1] }.join
-              #   puts expected_flip
-              #   puts guessed_flip
-              #   die "WRONG GUESS"
-              # end
-              # # retrurn if expected_flip =~ /^O*$/
+              round += increment
+              logger.info { "#{round}) #{@loops.values.map { |v| round % v[:size] == 0 ? "*" : "_" }.join}" }
+              found = true
+              @loops.each do |loop_name, loop|
+                found = false if round % loop[:size] != 0
+              end
+              if round > logg_round
+                puts round
+                logg_round *= 10
+              end
+              # puts found
+              break if found
             end
-            # puts @loop
-            logger.warn "Star two answer: #{@round} (rx: #{@rx})"
+            logger.warn "Star two answer: #{round}"
           end
 
 
@@ -334,5 +282,10 @@ module Bauk
   end
 end
 
-# s2 too low:  500000000
-# s2 too low: 2055000000
+# s2 too low:         500000000
+# s2 too low:        2055000000
+# s2 too high:  211934525900544
+# no         :   13245907868783
+# no         :   13245907868784
+# no         :   13245907868785
+#                   10000001432
