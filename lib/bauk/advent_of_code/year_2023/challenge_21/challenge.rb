@@ -66,17 +66,29 @@ module Bauk
             old_position_count = 0
             old_gone_count = 0
             gone_counts = []
+            gone_all_counts = []
+            gone_true_counts = []
+            gone_false_counts = []
             count.times do |round|
               logger.info { "#{round}) Gone: #{gone.length}, Positions: #{positions.length}" } if round % 10 == 0
-              # if (round-65) % 131 == 0
-              #   gone_count = gone.length
-              #   gone_counts << gone_count
-              #   find_pattern(gone_counts) if gone_counts.length > 2
-              #   position_count = positions.length
-              #   puts "#{round}) Gone: #{gone_count} (+#{gone_count - old_gone_count}), Positions: #{position_count} (+#{position_count-old_position_count})"
-              #   old_position_count = position_count
-              #   old_gone_count = gone_count
-              # end
+              if (round-65) % 131 == 0
+                gone_count = gone.length
+                gone_true_count = gone.values.select { |v| v == :E }.length
+                gone_false_count = gone.values.select { |v| v != :E }.length
+                gone_true_counts << gone_true_count
+                gone_false_counts << gone_false_count
+                gone_all_counts << {E: gone_true_count, e: gone_false_count, even: }
+                gone_counts << gone_count
+                if gone_counts.length > 9
+                  find_pattern(gone_true_counts)
+                  find_pattern(gone_false_counts)
+                  exit
+                end
+                position_count = positions.length
+                # puts "#{round}) Gone: #{gone_count} (+#{gone_count - old_gone_count}), Positions: #{position_count} (+#{position_count-old_position_count})"
+                old_position_count = position_count
+                old_gone_count = gone_count
+              end
               # puts positions.map { |p| p[:row] }.max / @map.row_count
               even = !even
               new_positions = []
@@ -121,18 +133,45 @@ module Bauk
           # AND! the number you want being 131*n + 65....
           # Pattern is... gone = 
           def steps4(count) # rubocop:disable Metrics/AbcSize
-            gone_count = 0
             count -= 65
             rounds = count / 131
+
+            # pattern = [
+            #   {E: 3642, e: 3776},
+            #   {E: 33652, e: 33248},
+            #   {E: 92596, e: 93270},
+            #   {E: 182630, e: 181686},
+            #   {E: 300518, e: 301732},
+            #   {E: 450576, e: 449092},
+            #   {E: 627408, e: 629162},
+            #   {E: 837490, e: 835466},
+            #   {E: 1073266, e: 1075560},
+            #   {E: 1343372, e: 1340808},
+            #   # {E: , e: },
+            #   # {E: , e: },
+            # ]
+            # find_pattern pattern.map { |p| p[:E] }.each_slice(2).map(&:first)
+            # find_pattern pattern.map { |p| p[:E] }.each_slice(2).map(&:last)
+            # exit
             
-            incrementer = 59484
-            pattern = [[7418], [59482]]
-            rounds.times do |round|
-              pattern[-1] << pattern[-1][-1] + incrementer
-              pattern[0] << pattern[0][-1] + pattern[-1][-2]
+            incrementer = 118968
+            even = false
+            pattern = [[{e: 3776, E: 3642}, {e: 33248, E: 33652}], [{e: 89494, E: 88954}, {e: 148438, E: 148978}]]
+            # puts "ROUNDS: #{rounds}"
+            rounds.times do
+              # puts pattern.inspect
+              even = !even
+              pattern[-1] << {}
+              pattern[0] << {}
+              %i[e E].each do |e|
+                pattern[-1][-1][e] = pattern[-1][-3][e] + incrementer
+                pattern[0][-1][e] = pattern[0][-3][e] + pattern[-1][-3][e]
+              end
+              # pattern[-1] << pattern[-1][-1] + incrementer
+              # pattern[0] << pattern[0][-1] + pattern[-1][-2]
             end
             # puts pattern.inspect
-            pattern[0][-1]
+            pattern[0][-2][even ? :E : :e]
           end
 
           def get_4_moves(row, column)
@@ -230,12 +269,15 @@ module Bauk
 
           def star_two
             test = 65
-            while test < 100
-              logger.warn "Star one answer: #{steps3(test)}"
-              logger.warn "Star one answer: #{steps4(test)}"
-              test += 131
-            end
-            # logger.warn "Star one answer: #{steps4(26501365)}"
+            # logger.warn "Star one answer: #{steps3(1000000)}"
+            # logger.warn "Star one answer: #{steps4(1000)}"
+            # while test < 1000
+            #   logger.warn "Testing #{test}:"
+            #   logger.warn "Star step3 answer: #{steps3(test)}"
+            #   logger.warn "Star step4 answer: #{steps4(test)}"
+            #   test += 131
+            # end
+            logger.warn "Star one answer: #{steps4(26501365)}"
           end
         end
       end
