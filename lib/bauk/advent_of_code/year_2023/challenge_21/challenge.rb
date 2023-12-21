@@ -17,9 +17,6 @@ module Bauk
             @column = start[2]
             @map.remove @row, @column, "S"
             @original_map = @map.deep_clone
-            puts @map
-            add_map_right
-            puts @map
           end
 
           def steps(count)
@@ -59,6 +56,98 @@ module Bauk
               check_map_size(positions)
             end
             @map.cells.select { |cell| cell.include? (even ? :E : :e) }.length
+          end
+
+          def steps3(count) # rubocop:disable Metrics/AbcSize
+            gone = {"#{@row}_#{@column}" => :E}
+            positions = [{row: @row, column: @column}]
+            @map = @original_map.deep_clone
+            even = true
+            old_position_count = 0
+            old_gone_count = 0
+            gone_counts = []
+            count.times do |round|
+              logger.info { "#{round}) Gone: #{gone.length}, Positions: #{positions.length}" } if round % 10 == 0
+              # if (round-65) % 131 == 0
+              #   gone_count = gone.length
+              #   gone_counts << gone_count
+              #   find_pattern(gone_counts) if gone_counts.length > 2
+              #   position_count = positions.length
+              #   puts "#{round}) Gone: #{gone_count} (+#{gone_count - old_gone_count}), Positions: #{position_count} (+#{position_count-old_position_count})"
+              #   old_position_count = position_count
+              #   old_gone_count = gone_count
+              # end
+              # puts positions.map { |p| p[:row] }.max / @map.row_count
+              even = !even
+              new_positions = []
+              positions.each do |position|
+                # if position[:row] == 65 && position[:column] % @map.column_count == 0
+                #   puts round
+                # end
+                # if position[:row] % @map.row_count == 0
+                #   puts "COLUMN: #{position[:column] % @map.column_count} #{even}"
+                # elsif position[:column] % @map.column_count == 0
+                #   puts "ROW: #{position[:row] % @map.row_count} #{even}"
+                # end
+                # if (position[:row] % @map.row_count) == @row && (position[:column] % @map.column_count) == @column
+                #   puts even
+                # end
+                get_4_moves(position[:row], position[:column]).each do |move|
+                  gone_key = "#{move[:row]}_#{move[:column]}"
+                  if free_space?(move) && !gone[gone_key]
+                    new_positions << move
+                    gone[gone_key] = even ? :E : :e
+                  end
+                end
+              end
+              positions = new_positions.uniq
+            end
+            gone.values.select { |v| v == (even ? :E : :e) }.length
+          end
+
+          def find_pattern(list)
+            pattern = [list]
+            until pattern[-1].all? { |n| n.zero? } || pattern[-1].length < 2
+              puts pattern[-1].inspect
+              from = pattern[-1]
+              pattern << []
+              (0...(from.length-1)).each do |i|
+                pattern[-1] << (from[i+1] - from[i])
+              end
+            end
+          end
+
+          # DEPENDS on there being a straight line to the ends, and there being exactly the same steps to each end!
+          # AND! the number you want being 131*n + 65....
+          # Pattern is... gone = 
+          def steps4(count) # rubocop:disable Metrics/AbcSize
+            gone_count = 0
+            count -= 65
+            rounds = count / 131
+            
+            incrementer = 59484
+            pattern = [[7418], [59482]]
+            rounds.times do |round|
+              pattern[-1] << pattern[-1][-1] + incrementer
+              pattern[0] << pattern[0][-1] + pattern[-1][-2]
+            end
+            # puts pattern.inspect
+            pattern[0][-1]
+          end
+
+          def get_4_moves(row, column)
+            [
+              {row:, column: column + 1},
+              {row:, column: column - 1},
+              {row: row + 1, column:},
+              {row: row - 1, column:}
+            ]
+          end
+
+          def free_space?(position)
+            row = position[:row] % @map.row_count
+            column = position[:column] % @map.column_count
+            @map.empty? row, column
           end
 
           def check_map_size(positions) # rubocop:disable Metrics/AbcSize
@@ -116,7 +205,7 @@ module Bauk
           end
 
           def show_positions(positions)
-            return
+            # return
             map = @map.deep_clone
             positions.each do |position|
               map.insert position[:row], position[:column], "O"
@@ -133,17 +222,25 @@ module Bauk
 
           def star_one
             # [6, 10, 50, 100, 500, 5000].each do |n|
-            [6, 10, 50, 100, 500, 5000].each do |n|
-              logger.warn "Test: #{n} -> #{steps2(n)}"
-            end
+            # [6, 10, 50, 100, 500, 5000].each do |n|
+            #   logger.warn "Test: #{n} -> #{steps3(n)}"
+            # end
             # logger.warn "Star one answer: 64 -> #{steps2(64)}"
           end
 
           def star_two
-            # logger.warn "Star one answer: #{steps(64)}"
+            test = 65
+            while test < 100
+              logger.warn "Star one answer: #{steps3(test)}"
+              logger.warn "Star one answer: #{steps4(test)}"
+              test += 131
+            end
+            # logger.warn "Star one answer: #{steps4(26501365)}"
           end
         end
       end
     end
   end
 end
+
+# Too high: 1217205991589418
