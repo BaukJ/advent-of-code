@@ -202,7 +202,7 @@ module Bauk
 
       def deep_clone
         new_map = clone
-        new_map.map = @map.map(&:clone)
+        new_map.map = @map.map { |c| c.map(&:clone) }
         new_map
       end
 
@@ -269,15 +269,17 @@ module Bauk
         ].join("\n")
       end
 
-      def insert_row(index = -1)
-        @map.insert(index, generate_row(index))
+      def insert_row(index = -1, new_row = nil)
+        new_row ||= generate_row(index)
+        @map.insert(index, new_row)
         @row_count += 1
         @row_max_index += 1
       end
 
-      def insert_column(index = -1)
+      def insert_column(index = -1, new_column = nil)
         rows.each_with_index do |row, row_index|
-          row.insert(index, generate_cell(row_index, index))
+          new_cell = new_column ? new_column[row_index] : generate_cell(row_index, index)
+          row.insert(index, new_cell)
         end
         @column_count += 1
         @column_max_index += 1
