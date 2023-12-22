@@ -53,3 +53,27 @@ class Integer
     to_s.gsub(/(\d)(?=(\d\d\d)+(?!\d))/, "\\1_")
   end
 end
+
+class Array
+  def deep_clone
+    map do |v|
+      if v.respond_to? :deep_clone
+        v.deep_clone
+      else
+        v.clone
+      end
+    end
+  end
+end
+
+class Hash
+  def deep_clone
+    map do |k,v|
+      if v.respond_to? :deep_clone
+        [k, v.deep_clone]
+      else
+        [k, v.clone]
+      end
+    end.to_h
+  end
+end
