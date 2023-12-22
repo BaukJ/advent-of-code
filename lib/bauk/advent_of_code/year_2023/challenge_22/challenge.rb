@@ -38,35 +38,28 @@ module Bauk
             while any_fell
               any_fell = false
               @blocks.each do |index, block|
-                free_to_fall = 10
+                free_to_fall = true
                 # puts "#{index}) #{block}"
                 block.each do |position|
-                  break if free_to_fall == 0
-                  (1..free_to_fall).each do |fall_distance|
-                    item_below = get_grid_position(position.merge({z: position[:z] - fall_distance}))
-                    # puts "Checking z : #{{z: position[:z] - fall_distance}}"
-                    break if item_below == index
-                    if (position[:z] - fall_distance) <= 0 || !item_below.nil?
-                      free_to_fall = fall_distance - 1
-                      # puts position[:z] - free_to_fall
-                      break
-                    end
+                  item_below = get_grid_position(position.merge({z: position[:z] - 1}))
+                  next if item_below == index
+                  if position[:z] == 1 || !item_below.nil?
+                    free_to_fall = false
                   end
                 end
-                if free_to_fall > 0
+                if free_to_fall
                   # puts "FALL"
                   any_fell = true
                   @fell[index] = true
                   block.each do |position|
                     remove_grid_position(position)
-                    position[:z] -= free_to_fall
+                    position[:z] -= 1
                     add_grid_position(position, index)
                   end
                 end
                 # sleep 0.5
               end
             end
-            # puts @grid.inspect
             # puts "Fall end"
           end
 
