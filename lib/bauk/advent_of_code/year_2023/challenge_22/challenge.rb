@@ -33,7 +33,8 @@ module Bauk
 
           def fall
             any_fell = true
-            puts "Fall start"
+            # puts "Fall start"
+            @fell = {}
             while any_fell
               any_fell = false
               @blocks.each do |index, block|
@@ -49,6 +50,7 @@ module Bauk
                 if free_to_fall
                   # puts "FALL"
                   any_fell = true
+                  @fell[index] = true
                   block.each do |position|
                     remove_grid_position(position)
                     position[:z] -= 1
@@ -58,7 +60,7 @@ module Bauk
                 # sleep 0.5
               end
             end
-            puts "Fall end"
+            # puts "Fall end"
           end
 
           def get_grid_position(position)
@@ -106,12 +108,22 @@ module Bauk
           end
 
           def calculate_block_falls
-            @blocks_falls = {}
-            check_blocks = @blocks.keys.reject { |b| @disintegratable.include? b }
-            check_blocks.each do |block|
-              @grid = @grid.clone
+            @total_falls = 0
+            check_blocks = @blocks.reject { |b, _| @disintegratable.include? b }
+            @starting_blocks = @blocks
+            @starting_grid = @grid
+            check_blocks.each do |index, block|
+              @grid = @starting_grid.deep_clone
+              @blocks = @starting_blocks.deep_clone
+              block.each do |position|
+                remove_grid_position position
+              end
+              @blocks.delete index
+              fall
+              @total_falls += @fell.length
+              puts "#{index} block would make #{@fell.length} fall"
             end
-            puts check_blocks.inspect
+            # puts check_blocks.inspect
           end
 
           def run
@@ -127,7 +139,7 @@ module Bauk
 
           def star_two
             calculate_block_falls
-            logger.warn "Star two answer: "
+            logger.warn "Star two answer: #{@total_falls}"
           end
         end
       end
