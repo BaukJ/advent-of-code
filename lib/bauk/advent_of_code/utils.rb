@@ -68,12 +68,12 @@ end
 
 class Hash
   def deep_clone
-    map do |k,v|
+    to_h do |k, v|
       if v.respond_to? :deep_clone
         [k, v.deep_clone]
       else
         [k, v.clone]
       end
-    end.to_h
+    end
   end
 end

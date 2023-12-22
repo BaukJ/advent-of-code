@@ -22,7 +22,7 @@ module Bauk
                     (@grid[z] ||= [])[x] ||= []
                     die if @grid[z][x][y]
                     @grid[z][x][y] = index
-                    (@blocks[index] ||= []) << {z:, x:, y:}
+                    (@blocks[index] ||= []) << { z:, x:, y: }
                   end
                 end
               end
@@ -41,21 +41,20 @@ module Bauk
                 free_to_fall = true
                 # puts "#{index}) #{block}"
                 block.each do |position|
-                  item_below = get_grid_position(position.merge({z: position[:z] - 1}))
+                  item_below = get_grid_position(position.merge({ z: position[:z] - 1 }))
                   next if item_below == index
-                  if position[:z] == 1 || !item_below.nil?
-                    free_to_fall = false
-                  end
+
+                  free_to_fall = false if position[:z] == 1 || !item_below.nil?
                 end
-                if free_to_fall
-                  # puts "FALL"
-                  any_fell = true
-                  @fell[index] = true
-                  block.each do |position|
-                    remove_grid_position(position)
-                    position[:z] -= 1
-                    add_grid_position(position, index)
-                  end
+                next unless free_to_fall
+
+                # puts "FALL"
+                any_fell = true
+                @fell[index] = true
+                block.each do |position|
+                  remove_grid_position(position)
+                  position[:z] -= 1
+                  add_grid_position(position, index)
                 end
                 # sleep 0.5
               end
@@ -78,13 +77,11 @@ module Bauk
           def find_disintegratable
             @rests = {}
             @supports = {}
-            @blocks.each do |index, _block|
+            @blocks.each_key do |index|
               @rests[index] = {}
               @supports[index] = {}
-            end
-            @blocks.each do |index, block|
               block.each do |position|
-                below = get_grid_position(position.merge({z: position[:z]-1}))
+                below = get_grid_position(position.merge({ z: position[:z] - 1 }))
                 # puts "#{below} is below #{index}"
                 unless below == index || below.nil?
                   @rests[index][below] = true
@@ -93,11 +90,11 @@ module Bauk
               end
             end
             @disintegratable = []
-            @blocks.each do |index, _block|
+            @blocks.each_key do |index|
               # puts "Checking block #{index}"
               can_remove = true
               # puts "Block supports: #{@supports[index]}"
-              @supports[index].each do |supported, _|
+              @supports[index].each_key do |supported|
                 can_remove = false if @rests[supported].length == 1
               end
               if can_remove
@@ -109,7 +106,7 @@ module Bauk
 
           def calculate_block_falls
             @total_falls = 0
-            check_blocks = @blocks.reject { |b, _| @disintegratable.include? b }
+            check_blocks = @blocks.except(*@disintegratable)
             @starting_blocks = @blocks
             @starting_grid = @grid
             check_blocks.each do |index, block|
