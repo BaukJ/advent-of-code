@@ -202,7 +202,7 @@ module Bauk
 
       def deep_clone
         new_map = clone
-        new_map.map = @map.map { |c| c.map(&:clone) }
+        new_map.map = @map.deep_clone
         new_map
       end
 
