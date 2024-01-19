@@ -103,7 +103,7 @@ module Bauk
                 @loads[old_map] = { map: @map.to_s, load: @load }
                 old_map = @map.to_s
               end
-              # puts @map.to_s_with_border
+              puts @map.to_s_with_border
             end
             logger.warn "Star two answer: #{@load}"
           end

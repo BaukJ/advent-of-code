@@ -40,8 +40,8 @@ module Bauk
               when :down then row += 1
               else die "Invalid direction: #{direction}"
               end
-              # puts @map.to_s_with_border
-              # sleep 0.5
+              puts @map.to_s_with_border
+              sleep 0.5
               return unless @map.point_inside_map?({ row:, column: })
             end
             @map.insert(row, column, "#")

@@ -83,8 +83,7 @@ module Bauk
           end
 
           def puts_map(map, row, column, turn)
-            return unless Opts.show
-
+            system "clear" # || system "cls"
             puts "TURN: #{turn}"
             map.insert(row, column, "o")
             puts map
@@ -94,7 +93,7 @@ module Bauk
 
           def turn(row, column, steps = [], step_count = 0)
             map = @maps[step_count]
-            puts_map(map, row, column, steps.length)
+            puts_map(map, row, column, steps.length) if Opts.show
             logger.debug { "[#{row},#{column}] steps=#{steps.length}: #{steps}" }
 
             if finished?(map, row, column, steps, step_count)
