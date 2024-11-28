@@ -2,12 +2,13 @@
 
 require_relative "base_class"
 require_relative "utils"
+require_relative "base_character"
 
 module Bauk
   module AdventOfCode
     # Base class for all maps
     class BaseMap < BaseClass # rubocop:disable Metrics/ClassLength
-      attr_accessor :map, :allow_multiples
+      attr_accessor :map, :allow_multiples, :infinite, :characters, :strict_indexes
       attr_reader :row_count, :column_count, :row_max_index, :column_max_index
 
       def self.from_file(file)
@@ -57,6 +58,9 @@ module Bauk
         @row_max_index = row_count - 1
         @column_max_index = column_count - 1
         @allow_multiples = false
+        @infinite = false
+        @characters = {}
+        @strict_indexes = true
         @map = generate_map
       end
 
@@ -113,15 +117,62 @@ module Bauk
         @map[row][column] = cell
       end
 
-      def row(index)
-        raise Error, "Requested invalid row index" if index < -@column_max_index || (index > @row_max_index)
+      def move_characters(row_delta, column_delta)
+        @characters.each do |_name, character|
+          character.move row_delta, column_delta
+        end
+      end
 
+      def shift_characters(row_delta, column_delta)
+        @characters.each do |_name, character|
+          character.row += row_delta
+          character.column += column_delta
+        end
+      end
+
+      def add_character(name, row=0, column=0)
+        @characters[name] = BaseCharacter.new name, row, column, self
+      end
+
+      def row_check(index)
+        min = @strict_indexes ? 0 : -@row_max_index
+        if index < min
+          raise Error, "Requested invalid row index (#{index} < #{min})" unless @infinite
+
+          shift = min - index
+          shift_characters shift, 0
+          shift.times { insert_row 0 }
+        end
+        if index > @row_max_index
+          raise Error, "Requested invalid row index (#{index} > #{@row_max_index})" unless @infinite
+
+          insert_row while index > @row_max_index
+        end
+      end
+
+      def row(index)
+        row_check index
         @map[index]
       end
 
-      def column(index)
-        raise Error, "Requested invalid column index" if index < -@column_max_index || (index > @column_max_index)
+      def column_check(index)
+        min = @strict_indexes ? 0 : -@column_max_index
+        if index < min
+          raise Error, "Requested invalid column index (#{index} < #{-@column_max_index})" unless @infinite
 
+          shift = min - index
+          shift_characters 0, shift
+          shift.times { insert_column 0 }
+        end
+        if index > @column_max_index
+          raise Error, "Requested invalid column index (#{index} > #{@column_max_index})" unless @infinite
+
+          insert_column while index > @column_max_index
+        end
+      end
+
+      def column(index)
+        column_check index
         @map.map do |row|
           row[index]
         end
@@ -175,6 +226,8 @@ module Bauk
       end
 
       def cell(row, column)
+        row_check row
+        column_check column
         @map[row][column]
       end
 

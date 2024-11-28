@@ -15,8 +15,8 @@ module Bauk
 
           def run
             logger.warn("Starting challenge #{self.class.name}")
-            star_one
-            star_two
+            star_one if [0, 1].include? Opts.star
+            star_two if [0, 2].include? Opts.star
           end
 
           def star_one
