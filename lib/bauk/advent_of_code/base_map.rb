@@ -192,6 +192,23 @@ module Bauk
         ret
       end
 
+      # Returns all cells inside the rectangle
+      def cells_inside(pointa, pointb)
+        ret = []
+        row_min = [pointa[:row], pointb[:row]].min
+        row_max = [pointa[:row], pointb[:row]].max
+        column_min = [pointa[:column], pointb[:column]].min
+        column_max = [pointa[:column], pointb[:column]].max
+        @map.each_with_index do |row, row_index|
+          next unless row_index >= row_min && row_index <= row_max
+
+          row.each_with_index do |char, column_index|
+            ret << char if column_index >= column_min && column_index <= column_max
+          end
+        end
+        ret
+      end
+
       def line_of_cells(points)
         [cell_from_hash(points[0])] + path_to_cells(points)
       end
@@ -200,7 +217,7 @@ module Bauk
         point[:row] >= 0 && point[:row] < @row_count && point[:column] >= 0 && point[:column] < @column_count
       end
 
-      # line line_of_cells, but omits your starting point
+      # like line_of_cells, but omits your starting point
       def path_to_cells(points)
         path = []
         (1...points.length).each do |i|
