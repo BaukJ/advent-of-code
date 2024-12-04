@@ -53,25 +53,25 @@ module Bauk
           def find_x_y_intersect_from_0(hail_1, hail_2) # rubocop:disable Metrics/AbcSize,Naming/VariableNumber
             {
               x: ((hail_1[:y] * hail_2[:c]) - (hail_2[:y] * hail_1[:c])) / ((hail_1[:x] * hail_2[:y]) - (hail_2[:x] * hail_1[:y])),
-              y: ((hail_2[:x]*hail_1[:c]) - (hail_1[:x]*hail_2[:c])) / ((hail_1[:x]*hail_2[:y]) - (hail_2[:x]*hail_1[:y]))
+              y: ((hail_2[:x] * hail_1[:c]) - (hail_1[:x] * hail_2[:c])) / ((hail_1[:x] * hail_2[:y]) - (hail_2[:x] * hail_1[:y]))
             }
           end
 
           def find_x_y_intersects
             @x_y_intersects = []
             @hails.each_with_index do |hail_1, index|
-              ((index+1)...@hails.length).each do |index_2|
+              ((index + 1)...@hails.length).each do |index_2|
                 hail_2 = @hails[index_2]
 
                 next if hail_1[:y][:x] == hail_2[:y][:x] # If they are parallel
 
                 logger.debug { "#{hail_1} + #{hail_2}" }
                 intersect = find_x_y_intersect_from_0 hail_1[0], hail_2[0]
-                logger.debug { "INTERSECT: #{intersect} "}
+                logger.debug { "INTERSECT: #{intersect} " }
 
                 # Filter intersects outside boundary
                 next unless intersect[:x].between?(@boundary_start, @boundary_end) && intersect[:y].between?(@boundary_start, @boundary_end)
-                
+
                 # Assuming no zero deltas!
                 # Filter past intersects
                 next if hail_1[:x_start] > intersect[:x] && hail_1[:x_delta].positive?
@@ -154,11 +154,11 @@ module Bauk
               # puts "#{min} -> #{max}"
               if before.empty? || after.empty? then die "ERR"
               elsif max > min
-                x_ranges << {start: before[-1][:x_start], end: after[0][:x_start], min:, max: }
+                x_ranges << { start: before[-1][:x_start], end: after[0][:x_start], min:, max: }
               end
             end
-            x_ranges << {start: 0, end: x_sorted[0][:x_start], min: x_sorted.map { |h| h[:x_delta] }.max, max: nil }
-            x_ranges << {start: x_sorted[-1][:x_start], end: x_sorted[-1][:x_start] * 2, min: nil, max: x_sorted.map { |h| h[:x_delta] }.min }
+            x_ranges << { start: 0, end: x_sorted[0][:x_start], min: x_sorted.map { |h| h[:x_delta] }.max, max: nil }
+            x_ranges << { start: x_sorted[-1][:x_start], end: x_sorted[-1][:x_start] * 2, min: nil, max: x_sorted.map { |h| h[:x_delta] }.min }
             puts "X RANGES:"
             puts x_ranges
 
@@ -171,11 +171,11 @@ module Bauk
               min = after.map { |h| h[:y_delta] }.max + 1
               if before.empty? || after.empty? then die "ERR"
               elsif max > min
-                y_ranges << {start: before[-1][:y_start], end: after[0][:y_start], min:, max: }
+                y_ranges << { start: before[-1][:y_start], end: after[0][:y_start], min:, max: }
               end
             end
-            y_ranges << {start: 0, end: y_sorted[0][:y_start], min: y_sorted.map { |h| h[:y_delta] }.max, max: nil }
-            y_ranges << {start: y_sorted[-1][:y_start], end: nil, min: nil, max: y_sorted.map { |h| h[:y_delta] }.min }
+            y_ranges << { start: 0, end: y_sorted[0][:y_start], min: y_sorted.map { |h| h[:y_delta] }.max, max: nil }
+            y_ranges << { start: y_sorted[-1][:y_start], end: nil, min: nil, max: y_sorted.map { |h| h[:y_delta] }.min }
             puts "Y RANGES:"
             puts y_ranges
 
@@ -188,14 +188,13 @@ module Bauk
               min = after.map { |h| h[:z_delta] }.max + 1
               if before.empty? || after.empty? then die "ERR"
               elsif max > min
-                z_ranges << {start: before[-1][:z_start], end: after[0][:z_start], min:, max: }
+                z_ranges << { start: before[-1][:z_start], end: after[0][:z_start], min:, max: }
               end
             end
-            z_ranges << {start: 0, end: z_sorted[0][:z_start], min: z_sorted.map { |h| h[:z_delta] }.max, max: nil }
-            z_ranges << {start: z_sorted[-1][:z_start], end: nil, min: nil, max: z_sorted.map { |h| h[:z_delta] }.min }
+            z_ranges << { start: 0, end: z_sorted[0][:z_start], min: z_sorted.map { |h| h[:z_delta] }.max, max: nil }
+            z_ranges << { start: z_sorted[-1][:z_start], end: nil, min: nil, max: z_sorted.map { |h| h[:z_delta] }.min }
             puts "Z RANGES:"
             puts z_ranges
-
 
             x_ranges.each do |x_range|
               puts x_range.inspect
@@ -214,8 +213,7 @@ module Bauk
             puts "X smallest: #{x_smallest[:id]}"
             puts "X largest: #{x_largest[:id]}"
 
-
-            y_sorted = @hails.sort_by { |hail| hail[:y_start] }            
+            y_sorted = @hails.sort_by { |hail| hail[:y_start] }
             y_smallest = y_sorted.select { |hail| hail[:y_delta].negative? }.first
             y_largest = y_sorted.select { |hail| hail[:y_delta].positive? }.last
             puts "Y smallest: #{y_smallest[:id]}"
@@ -223,7 +221,7 @@ module Bauk
 
             z_sorted = @hails.sort_by { |hail| hail[:z_start] }
             z_smallest = z_sorted.select { |hail| hail[:z_delta].negative? }.first
-            z_largest = z_sorted.select { |hail| hail[:z_delta].positive? }.last || {id: "N/A"}
+            z_largest = z_sorted.select { |hail| hail[:z_delta].positive? }.last || { id: "N/A" }
             puts "Z smallest: #{z_smallest[:id]}"
             puts "Z largest: #{z_largest[:id]}"
 
@@ -231,7 +229,7 @@ module Bauk
               firsts[hail[:id]] ||= 0
               firsts[hail[:id]] += 1
             end
-            firsts.select! { |k,v| v > 1 }
+            firsts.select! { |_k, v| v > 1 }
             die "Invalid assumptions" if firsts.length != 1
 
             @first_hail_id = firsts.keys.first

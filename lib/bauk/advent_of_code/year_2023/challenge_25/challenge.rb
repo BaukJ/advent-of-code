@@ -18,7 +18,7 @@ module Bauk
               start, finishes = line.split(": ")
               @nodes[start] ||= {}
               @all_nodes[start] = true
-              finishes.split(" ").each do |finish|
+              finishes.split.each do |finish|
                 @nodes[start][finish] = true
                 @reverse_nodes[finish] ||= {}
                 @reverse_nodes[finish][start] = true

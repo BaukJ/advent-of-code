@@ -130,7 +130,7 @@ module Bauk
         end
       end
 
-      def add_character(name, row=0, column=0)
+      def add_character(name, row = 0, column = 0)
         @characters[name] = BaseCharacter.new name, row, column, self
       end
 
@@ -143,11 +143,10 @@ module Bauk
           shift_characters shift, 0
           shift.times { insert_row 0 }
         end
-        if index > @row_max_index
-          raise Error, "Requested invalid row index (#{index} > #{@row_max_index})" unless @infinite
+        return unless index > @row_max_index
+        raise Error, "Requested invalid row index (#{index} > #{@row_max_index})" unless @infinite
 
-          insert_row while index > @row_max_index
-        end
+        insert_row while index > @row_max_index
       end
 
       def row(index)
@@ -164,11 +163,10 @@ module Bauk
           shift_characters 0, shift
           shift.times { insert_column 0 }
         end
-        if index > @column_max_index
-          raise Error, "Requested invalid column index (#{index} > #{@column_max_index})" unless @infinite
+        return unless index > @column_max_index
+        raise Error, "Requested invalid column index (#{index} > #{@column_max_index})" unless @infinite
 
-          insert_column while index > @column_max_index
-        end
+        insert_column while index > @column_max_index
       end
 
       def column(index)

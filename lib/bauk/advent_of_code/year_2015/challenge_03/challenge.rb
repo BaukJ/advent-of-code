@@ -43,7 +43,7 @@ module Bauk
             end
             total = 0
             map.cells.each do |cell|
-              total += 1 if cell[0] > 0
+              total += 1 if (cell[0]).positive?
             end
             logger.warn "Star one answer: #{total}"
           end

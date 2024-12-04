@@ -19,7 +19,8 @@ module Bauk
             star_two if [0, 2].include? Opts.star
           end
 
-          def star_one # >228 <250 <249
+          # >228 <250 <249
+          def star_one
             previous_char = ""
             nice = 0
             naughty = 0
@@ -33,9 +34,9 @@ module Bauk
                 forbidden += 1 if %w[ab cd pq xy].include? "#{previous_char}#{char}"
                 previous_char = char
               end
-              nice += 1 if vowels >= 3 && duplicates > 0 && forbidden == 0
-              naughty += 1 unless vowels >= 3 && duplicates > 0 && forbidden == 0
-              puts "#{line}  #{vowels} vowels, #{duplicates} duplicated #{forbidden} forbidden => #{vowels >= 3 && duplicates > 0 && forbidden == 0}"
+              nice += 1 if vowels >= 3 && duplicates.positive? && forbidden.zero?
+              naughty += 1 unless vowels >= 3 && duplicates.positive? && forbidden.zero?
+              puts "#{line}  #{vowels} vowels, #{duplicates} duplicated #{forbidden} forbidden => #{vowels >= 3 && duplicates.positive? && forbidden.zero?}"
             end
             logger.warn "Star one answer: #{nice} / #{naughty}"
           end

@@ -7,25 +7,25 @@ module Bauk
     module Year2023
       module Challenge23
         # Challenge for 2023/23
-        class Challenge < BaseChallenge # rubocop:disable Metrics/ClassLength
+        class Challenge < BaseChallenge
           def initialize
             super
             @lines = File.readlines File.join(__dir__, Opts.file), chomp: true
             @map = Map.from_lines @lines
             @row = 0
             @column = 1
-            @been = {"#{@row}_#{@column}" => true}
+            @been = { "#{@row}_#{@column}" => true }
           end
 
           def walk(row, column, been = {})
             show_map been
-            if row == @map.row_max_index && column = @map.column_max_index - 1
+            if row == @map.row_max_index && (column = @map.column_max_index - 1)
               logger.info "FINISHED in #{been.length} steps"
               @longest = been.length if been.length > @longest
               return
             end
             # puts been.length
-            been = been.merge({"#{row}_#{column}" => {row:, column:}})
+            been = been.merge({ "#{row}_#{column}" => { row:, column: } })
             # been["#{row}_#{column}"] = {row:, column:}
             current_cell = @map.cell row, column
             if current_cell.empty? then possible_cells = @map.adjacent_4_cells_with_row_column(row, column)
@@ -38,15 +38,14 @@ module Bauk
             end
             possible_cells.each do |cell, r, c|
               next if been["#{r}_#{c}"]
-              if cell.empty? || %w[> < v ^].include?(cell[0])
-                walk(r, c, been)
-              end
+
+              walk(r, c, been) if cell.empty? || %w[> < v ^].include?(cell[0])
             end
           end
 
           def walk2(row, column, been = {})
             @been_paths = {}
-            if row == @map.row_max_index && column = @map.column_max_index - 1
+            if row == @map.row_max_index && (column = @map.column_max_index - 1)
               show_map been
               logger.info "FINISHED in #{been.length} steps"
               @longest = been.length if been.length > @longest
@@ -57,8 +56,9 @@ module Bauk
             end
             key = "#{row}_#{column}"
             return if @been_paths[key] && @been_paths[key][:length] > been.length
+
             # puts been.length
-            been = been.merge({key => {row:, column:, length: been.length}})
+            been = been.merge({ key => { row:, column:, length: been.length } })
             # been["#{row}_#{column}"] = {row:, column:}
             possible_cells = @map.adjacent_4_cells_with_row_column(row, column)
             @paths += possible_cells.length
@@ -66,15 +66,14 @@ module Bauk
               @paths -= 1
               # puts @paths
               next if been["#{r}_#{c}"]
-              if cell.empty? || %w[> < v ^].include?(cell[0])
-                walk2(r, c, been)
-              end
+
+              walk2(r, c, been) if cell.empty? || %w[> < v ^].include?(cell[0])
             end
           end
 
           def walk3(row, column)
             @been_paths = {}
-            paths = [{been: {}, row:, column:}]
+            paths = [{ been: {}, row:, column: }]
             step = 0
             until paths.empty?
               step += 1
@@ -82,7 +81,7 @@ module Bauk
               logger.warn { "#{step}) #{paths.length}" }
               paths.each do |path|
                 # show_map path[:been]
-                if path[:row] == @map.row_max_index && path[:column] = @map.column_max_index - 1
+                if path[:row] == @map.row_max_index && (path[:column] = @map.column_max_index - 1)
                   # show_map been
                   logger.info "FINISHED in #{path[:been].length} steps"
                   @longest = path[:been].length if path[:been].length > @longest
@@ -94,16 +93,15 @@ module Bauk
                 key = "#{path[:row]}_#{path[:column]}"
                 # next if @been_paths[key] && @been_paths[key][:length] > been.length
                 # puts been.length
-                been = path[:been].merge({key => {row: path[:row], column: path[:column], length: path[:been].length}})
+                been = path[:been].merge({ key => { row: path[:row], column: path[:column], length: path[:been].length } })
                 possible_cells = @map.adjacent_4_cells_with_row_column(path[:row], path[:column])
                 possible_cells.each do |cell, r, c|
                   next if been["#{r}_#{c}"]
-                  if cell.empty? || %w[> < v ^].include?(cell[0])
-                    new_paths << {row: r, column: c, been: been}
-                  end
+
+                  new_paths << ({ row: r, column: c, been: }) if cell.empty? || %w[> < v ^].include?(cell[0])
                 end
               end
-              
+
               paths = new_paths
               # Filter paths
               # paths = []
@@ -114,15 +112,15 @@ module Bauk
           end
 
           def walk4(row, column) # rubocop:disable Metrics/AbcSize
-            paths = {"#{row}_#{column}" => {beens: [{"" => true}], row:, column:}}
+            paths = { "#{row}_#{column}" => { beens: [{ "" => true }], row:, column: } }
             step = -1
-            until paths.empty? #|| step > 1200
+            until paths.empty? # || step > 1200
               step += 1
               new_paths = {}
               logger.warn { "#{step}) #{paths.length} (#{paths.map { |_k, v| v[:beens].length }.sum})" }
               # logger.warn { "#{step}) #{paths.length}" }
               paths.each do |key, path|
-                show_map({a: {row: path[:row], column: path[:column]}})
+                show_map({ a: { row: path[:row], column: path[:column] } })
                 if path[:row] == @map.row_max_index && path[:column] == @map.column_max_index - 1
                   logger.info "FINISHED in #{step} steps"
                   @longest = step
@@ -130,15 +128,15 @@ module Bauk
                 end
                 possible_cells = @map.adjacent_4_cells_with_row_column(path[:row], path[:column])
                 possible_cells.each do |cell, r, c|
-                  next unless cell.empty? #|| %w[> < v ^].include?(cell[0])
+                  next unless cell.empty? # || %w[> < v ^].include?(cell[0])
 
                   new_key = "#{r}_#{c}"
                   path[:beens].each do |been|
                     next if been[new_key]
 
-                    new_paths[new_key] ||= {row: r, column: c, beens: []}
+                    new_paths[new_key] ||= { row: r, column: c, beens: [] }
 
-                    new_paths[new_key][:beens] << been.merge({key => true})
+                    new_paths[new_key][:beens] << been.merge({ key => true })
                   end
                 end
               end
@@ -159,13 +157,13 @@ module Bauk
           def walk5(row, column) # rubocop:disable Metrics/AbcSize
             parse_nodes
             puts @nodes
-            @nodes.each do |k,v|
+            @nodes.each do |k, v|
               puts k
               puts v
             end
             @longest = 0
             round = 0
-            paths = {"#{row}_#{column}" => {been: {"" => true}, row:, column:, steps: 0}}
+            paths = { "#{row}_#{column}" => { been: { "" => true }, row:, column:, steps: 0 } }
             until paths.empty?
               round += 1
               new_paths = []
@@ -188,7 +186,7 @@ module Bauk
                   # puts @map.row_max_index
                   # puts dest.inspect
                   # puts path.inspect
-                  new_paths << [dest_key, {been: path[:been].merge({key => true}), row: dest[:row], column: dest[:column], steps: path[:steps] + dest[:steps]}]
+                  new_paths << [dest_key, { been: path[:been].merge({ key => true }), row: dest[:row], column: dest[:column], steps: path[:steps] + dest[:steps] }]
                 end
               end
 
@@ -210,13 +208,11 @@ module Bauk
 
               key = "#{row}_#{column}"
               adjacents = @map.adjacent_4_cells_with_row_column(row, column).select { |c, _, _| c.empty? }
-              if adjacents.length > 2 || row == 0
-                @nodes[key] = {row:, column:, dests: parse_node(row, column, adjacents) }
-              end
+              @nodes[key] = { row:, column:, dests: parse_node(row, column, adjacents) } if adjacents.length > 2 || row.zero?
             end
           end
 
-          def parse_node start_row, start_column, adjacents
+          def parse_node(start_row, start_column, adjacents)
             dests = {}
             adjacents.each do |_cell, row, column|
               # puts "#{row}/#{column}"
@@ -227,7 +223,7 @@ module Bauk
                 been["#{row}_#{column}"] = true
                 adjacents = @map.adjacent_4_cells_with_row_column(row, column).select { |c, ro, co| c.empty? && !been["#{ro}_#{co}"] }
 
-                if adjacents.length == 0 && row != @map.row_max_index
+                if adjacents.empty? && row != @map.row_max_index
                   break
                 elsif adjacents.length == 1
                   row = adjacents[0][1]
@@ -240,7 +236,7 @@ module Bauk
                     steps:
                   }
                   break
-                end 
+                end
               end
             end
             dests

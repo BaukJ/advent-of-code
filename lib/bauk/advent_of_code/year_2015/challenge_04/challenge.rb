@@ -24,7 +24,7 @@ module Bauk
             num = -1
             input = "iwrupvqb"
             md5 = Digest::MD5.new
-            while true
+            loop do
               num += 1
               md5.reset
               md5 << input
@@ -39,7 +39,7 @@ module Bauk
             num = -1
             input = "iwrupvqb"
             md5 = Digest::MD5.new
-            while true
+            loop do
               num += 1
               md5.reset
               md5 << input

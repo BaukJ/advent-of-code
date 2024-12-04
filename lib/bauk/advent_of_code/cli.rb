@@ -79,8 +79,7 @@ module Bauk
       def parse_challenge_options(challenge_module, options, year, challenge)
         challenge_options = challenge_module.const_get "Options"
         challenge_options.parse(@parser)
-      rescue NameError => e
-        puts e
+      rescue NameError
         logger.info "Options not found for #{year}/#{challenge}"
       ensure
         @parser.parse!(options)
