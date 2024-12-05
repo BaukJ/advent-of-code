@@ -51,7 +51,32 @@ module Bauk
           end
 
           def star_two
-            logger.warn "Star two answer: "
+            total = 0
+            @map.each_with_index do |cells, row|
+              cells.each_with_index do |cell, column|
+                next unless cell == "A"
+
+                lines = [
+                  [{ row: row - 1, column: column - 1 }, { row: row + 1, column: column + 1 }],
+                  # [{ row: row + 1, column: column + 1 }, { row: row - 1, column: column - 1 }],
+                  [{ row: row - 1, column: column + 1 }, { row: row + 1, column: column - 1 }]
+                  # [{ row: row + 1, column: column - 1 }, { row: row - 1, column: column + 1 }]
+                ]
+                mas_count = 0
+                lines.each do |positions|
+                  next if positions.any? { |pos| pos[:row].negative? || pos[:column].negative? }
+                  next unless (@map[positions[0][:row]]&.[](positions[0][:column]) == "M" &&
+                              @map[positions[1][:row]]&.[](positions[1][:column]) == "S") ||
+                              (@map[positions[0][:row]]&.[](positions[0][:column]) == "S" &&
+                              @map[positions[1][:row]]&.[](positions[1][:column]) == "M")
+
+                  mas_count += 1
+                end
+                total += 1 if mas_count == 2
+                # puts "Found X at: #{row}/#{column}"
+              end
+            end
+            logger.warn "Star two answer: #{total}"
           end
         end
       end
